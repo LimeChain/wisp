@@ -13,16 +13,17 @@ export class ApiController {
   @Post("/finality_update")
   finalityUpdate(@Body() body: any) {
     const update = body as altair.LightClientFinalityUpdate;
-    this.logger.log(`Received new finality update for slot=${update.attestedHeader.beacon.slot}`);
+    this.logger.log(`Received new finality update for slot=${update.finalizedHeader.beacon.slot}`);
+    const startTime = Date.now();
     // Start the processing asynchronously
     this.appService.processFinalityUpdate(update).then(() => {
-      this.logger.log(`Processed finality update for slot ${update.attestedHeader.beacon.slot}`);
+      this.logger.log(`Processed finality update for slot ${update.finalizedHeader.beacon.slot} in ${(Date.now() - startTime)/1000/60} minutes`);
     });
   }
 
   @Post("/optimistic_update")
   optimisticUpdate(@Body() body: any) {
-    const update = body as altair.LightClientOptimisticUpdate;
+    const update = body as altair.LightClientFinalityUpdate;
     this.logger.debug(`Received optimistic update for slot=${update.attestedHeader.beacon.slot}. No action will be taken`);
   }
 }

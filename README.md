@@ -16,6 +16,15 @@ $ npm install
 
 ## Running the app
 
+**Prerequisite**
+
+Populate the ENV variables
+```markdown
+cp example.env .env
+```
+
+**Scripts**
+
 ```bash
 # development
 $ npm run start
