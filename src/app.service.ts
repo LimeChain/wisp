@@ -22,11 +22,11 @@ export class AppService {
       this.logger.log(`ZKP generation already in progress. Skipping ZKP creation for slot=${finalizedSlot}`);
       return;
     }
-    // 1. Compute BLS Header Verify ZKP
+    // 1. Request BLS Header Verify ZKP
     const headerProofPromise = this.proverService.computeHeaderProof(update);
     this.logger.log(`Requested ZKP for BLS Header Verification for slot=${finalizedSlot}`);
 
-    // 2. Compute SSZ to Poseidon ZKP if necessary
+    // 2. Request SSZ to Poseidon ZKP if necessary
     let syncCommitteeProofPromise;
     if (update.nextSyncCommittee) {
       syncCommitteeProofPromise = this.proverService.computeSyncCommitteeProof(update);
@@ -37,9 +37,17 @@ export class AppService {
       });
     }
 
-    // 3. Wait for both ZKPs
+    // 3. Prepare Header Update
+    // Get block from Beacon API
+    // Compute executionRoot and executionRootNodes
+    // Compute syncCommitteeRoot and syncCommitteeRootNodes
+    // Compute participation
+
+    // 4. Wait for both ZKPs
     const proofs = await Promise.all([headerProofPromise, syncCommitteeProofPromise]);
     this.logger.log(proofs);
+
+    // Create LightClientUpdate struct with populated data
 
     // 4. Broadcast header updates to all on-chain Light Client contracts
   }
