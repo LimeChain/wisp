@@ -56,7 +56,7 @@ TODO License
 ### TODOs for a functioning CRC Light Client
 
 **Step 1 (CRC-Relay):**
-- [ ] Make it so that `ssz` package can be used in CRC-relayer
+- [X] Make it so that `ssz` package can be used in CRC-relayer
 - [ ] Extend beacon service to be able to get block by ID
 - [ ] Add logic for preparing `LightClientUpdate` struct
 
