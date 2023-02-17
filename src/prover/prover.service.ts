@@ -6,7 +6,6 @@ import { PointG1, PointG2 } from "@noble/bls12-381";
 import { Utils } from "../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
-import bigIntToArray = Utils.bigIntToArray;
 
 const ROOT_BYTE_LENGTH = 32;
 const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
@@ -117,12 +116,12 @@ export class ProverService {
     signaturePoint.assertValidity();
     return [
       [
-        bigIntToArray(signaturePoint.toAffine()[0].c0.value),
-        bigIntToArray(signaturePoint.toAffine()[0].c1.value)
+        Utils.bigIntToArray(signaturePoint.toAffine()[0].c0.value),
+        Utils.bigIntToArray(signaturePoint.toAffine()[0].c1.value)
       ],
       [
-        bigIntToArray(signaturePoint.toAffine()[1].c0.value),
-        bigIntToArray(signaturePoint.toAffine()[1].c1.value)
+        Utils.bigIntToArray(signaturePoint.toAffine()[1].c0.value),
+        Utils.bigIntToArray(signaturePoint.toAffine()[1].c1.value)
       ]
     ];
   }
