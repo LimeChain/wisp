@@ -4,9 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { Utils } from "../utils";
 
 const BEACON_API_V1 = `/eth/v1/beacon/`;
-const BEACON_API_V2 = `/eth/v2/beacon/`;
 const PUB_KEY_BATCH_SIZE = 100;
-const SLOTS_PER_SYNC_COMMITTEE_PERIOD = 8192;
 
 @Injectable()
 export class BeaconService {
@@ -26,10 +24,10 @@ export class BeaconService {
   }
 
   async getSyncCommitteePubKeys(slot: number): Promise<string[]> {
-    const syncPeriod = Math.floor(slot / SLOTS_PER_SYNC_COMMITTEE_PERIOD);
-    const syncCommitteeCache = this.syncCommitteesCache.get(syncPeriod);
+    const syncCommitteePeriod = Utils.syncCommitteePeriodFor(slot)
+    const syncCommitteeCache = this.syncCommitteesCache.get(syncCommitteePeriod);
     if (syncCommitteeCache) {
-      this.logger.debug(`Using Sync Committee Key Cache. period=${syncPeriod}; slot=${slot}`);
+      this.logger.debug(`Using Sync Committee Key Cache. period=${syncCommitteePeriod}; slot=${slot}`);
       return syncCommitteeCache;
     }
 
@@ -53,7 +51,7 @@ export class BeaconService {
     }
 
     const syncCommitteeKeys = committee.map((validatorIndex: string) => validator2PubKey.get(validatorIndex));
-    this.syncCommitteesCache.set(syncPeriod, syncCommitteeKeys);
+    this.syncCommitteesCache.set(syncCommitteePeriod, syncCommitteeKeys);
     return syncCommitteeKeys;
   }
 

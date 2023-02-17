@@ -17,9 +17,17 @@ export class ProverService {
   private readonly baseUrl;
   private readonly proofEndpoint: string = "/api/v1/proof/generate";
   private readonly logger = new Logger(ProverService.name);
+  private isZKPInProgress: boolean = false;
 
   constructor(private config: ConfigService, private beaconService: BeaconService) {
     this.baseUrl = this.config.get<string>("PROVER_URL");
+  }
+
+  /**
+   * Returns whether the Prover service has a ZKP generation already in progress
+   */
+  hasCapacity(): boolean {
+    return !this.isZKPInProgress;
   }
 
   /**
@@ -27,7 +35,9 @@ export class ProverService {
    * Requests a ZKP from the ProverAPI
    * @param update
    */
-  async computeHeaderProof(update: altair.LightClientFinalityUpdate) {
+  async computeHeaderProof(update: altair.LightClientUpdate) {
+    this.isZKPInProgress = true;
+
     // 1. Prepare the ZKP inputs
     const syncCommitteePubKeys = await this.beaconService.getSyncCommitteePubKeys(update.signatureSlot);
     const pubkeys = ProverService.pubKeysHex2Int(syncCommitteePubKeys);
@@ -38,11 +48,16 @@ export class ProverService {
       pubkeys,
       pubkeybits,
       signature,
-      signingRoot
+      signing_root: signingRoot
     };
     // 2. Request a BLS Header Verify ZKP (takes ~3-4 minutes)
+    const proof = await this.requestHeaderProof(blsHeaderVerifyInput);
+    this.isZKPInProgress = false;
+    return proof;
+  }
 
-    // 3. Return generated ZKP
+  async computeSyncCommitteeProof(update: altair.LightClientUpdate) {
+
   }
 
   async requestSyncCommitteeProof(inputs: any) {

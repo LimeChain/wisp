@@ -2,6 +2,7 @@ import { PointG1 } from "@noble/bls12-381";
 
 const N: number = 55; // The number of bits to use per register
 const K: number = 7; // The number of registers
+const SLOTS_PER_SYNC_COMMITTEE_PERIOD = 8192;
 
 export namespace Utils {
   export function remove0x(str: string): string {
@@ -71,5 +72,8 @@ export namespace Utils {
       arr.push(sszType[i]);
     }
     return new Uint8Array(arr);
+  }
+  export function syncCommitteePeriodFor(slot: number): number {
+    return Math.floor(slot / SLOTS_PER_SYNC_COMMITTEE_PERIOD);
   }
 }
