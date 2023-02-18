@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { BeaconService } from "../beacon/beacon.service";
 import { altair } from "@lodestar/types";
 import { lodestar } from "../lodestar-types";
-import { TreeOffsetProof } from "@chainsafe/persistent-merkle-tree";
+import { createProof, ProofType, SingleProof } from "@chainsafe/persistent-merkle-tree";
 import { ethers } from "ethers";
 import { Utils } from "../utils";
 import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "../prover/prover.service";
@@ -60,16 +60,14 @@ export class LightClientService {
 
   private async buildLightClientUpdate(update: altair.LightClientUpdate): Promise<LightClientUpdate> {
     const finalizedBeaconBody = await this.beaconService.getBeaconBlockBody(update.finalizedHeader.beacon.slot);
-    const executionRootNodesBytes = (lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody)
-      .createProof([["executionPayload", "stateRoot"]]) as TreeOffsetProof).leaves;
-    const executionStateRoot = ethers.utils.hexlify(finalizedBeaconBody.executionPayload.stateRoot);
-    const executionStateRootBranch = [];
-    executionRootNodesBytes.forEach(node => {
-      const nodeHex = ethers.utils.hexlify(node);
-      // One of the nodes is the leaf we want to prove
-      if (nodeHex !== executionStateRoot) {
-        executionStateRootBranch.push(nodeHex);
+    const merkleInclusionProof = createProof(
+      lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody).node, {
+        type: ProofType.single,
+        gindex: lodestar.ssz.bellatrix.BeaconBlockBody.getPathInfo(["executionPayload", "stateRoot"]).gindex
       }
+    ) as SingleProof;
+    const executionStateRootBranch = merkleInclusionProof.witnesses.map(witnessNode => {
+      return ethers.utils.hexlify(witnessNode);
     });
 
     let syncCommitteeRoot = ethers.constants.HashZero;
@@ -86,7 +84,7 @@ export class LightClientService {
     return {
       attestedHeader: LightClientService.asHeaderObject(update.attestedHeader.beacon),
       finalizedHeader: LightClientService.asHeaderObject(update.finalizedHeader.beacon),
-      executionStateRoot,
+      executionStateRoot: ethers.utils.hexlify(finalizedBeaconBody.executionPayload.stateRoot),
       executionStateRootBranch,
       nextSyncCommitteeRoot: "", // TODO
       nextSyncCommitteeBranch: [], // TODO

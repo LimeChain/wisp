@@ -57,8 +57,8 @@ TODO License
 
 **Step 1 (CRC-Relay):**
 - [X] Make it so that `ssz` package can be used in CRC-relayer
-- [ ] Extend beacon service to be able to get block by ID
-- [ ] Add logic for preparing `LightClientUpdate` struct
+- [X] Extend beacon service to be able to get block by ID
+- [X] Add logic for preparing `LightClientUpdate` struct
 
 **Step 2 (Contracts):**
 - [ ] Deploy the Contracts (Polygon zkEVM)
