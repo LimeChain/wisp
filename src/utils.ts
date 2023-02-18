@@ -73,7 +73,19 @@ export namespace Utils {
     }
     return new Uint8Array(arr);
   }
+
   export function syncCommitteePeriodFor(slot: number): number {
     return Math.floor(slot / SLOTS_PER_SYNC_COMMITTEE_PERIOD);
+  }
+
+  export function syncCommitteeBytes2bits(syncCommitteeBytes: any): number[] {
+    let result = [];
+    // SyncCommittee Bytes are 64. Cannot get length of BitArray
+    for (let i = 0; i < syncCommitteeBytes.bitLen / 8; i++) {
+      let uint8Bits = syncCommitteeBytes.uint8Array[i].toString(2);
+      uint8Bits = Utils.padBitsToUint8Length(uint8Bits);
+      result = result.concat(uint8Bits.split("").reverse());
+    }
+    return result.map(e => { return Number(e)})
   }
 }

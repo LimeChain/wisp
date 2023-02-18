@@ -4,11 +4,11 @@ import { altair } from "@lodestar/types";
 import { BeaconService } from "../beacon/beacon.service";
 import { PointG1, PointG2 } from "@noble/bls12-381";
 import { Utils } from "../utils";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
 
-const ROOT_BYTE_LENGTH = 32;
-const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
+export const ROOT_BYTE_LENGTH = 32;
+export const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
 
 @Injectable()
 export class ProverService {
@@ -18,7 +18,7 @@ export class ProverService {
   private readonly logger = new Logger(ProverService.name);
   private isZKPInProgress: boolean = false;
 
-  constructor(private config: ConfigService, private beaconService: BeaconService) {
+  constructor(private beaconService: BeaconService, private config: ConfigService) {
     this.baseUrl = this.config.get<string>("PROVER_URL");
   }
 
@@ -34,13 +34,13 @@ export class ProverService {
    * Requests a ZKP from the ProverAPI
    * @param update
    */
-  async computeHeaderProof(update: altair.LightClientUpdate) {
+  async computeHeaderProof(update: altair.LightClientUpdate): Promise<Groth16Proof> {
     this.isZKPInProgress = true;
 
     // 1. Prepare the ZKP inputs
     const syncCommitteePubKeys = await this.beaconService.getSyncCommitteePubKeys(update.signatureSlot);
     const pubkeys = ProverService.pubKeysHex2Int(syncCommitteePubKeys);
-    const pubkeybits = ProverService.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits);
+    const pubkeybits = Utils.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits);
     const signature = ProverService.sig2SnarkInput(update.syncAggregate.syncCommitteeSignature);
     const signingRoot = await this.computeSigningRoot(update);
     const blsHeaderVerifyInput = {
@@ -52,7 +52,7 @@ export class ProverService {
     // 2. Request a BLS Header Verify ZKP (takes ~3-4 minutes)
     const proof = await this.requestHeaderProof(blsHeaderVerifyInput);
     this.isZKPInProgress = false;
-    return proof;
+    return ProverService.parseProof(proof);
   }
 
   async computeSyncCommitteeProof(update: altair.LightClientUpdate) {
@@ -61,6 +61,42 @@ export class ProverService {
 
   async requestSyncCommitteeProof(inputs: any) {
     return this.callProver("ssz2Poseidon", inputs);
+  }
+
+  private static parseProof(proof: any): Groth16Proof {
+    const aOriginal = proof.proof['pi_a'];
+    const bOriginal = proof.proof['pi_b'];
+    const cOriginal = proof.proof['pi_c'];
+    // The last element of `pi_a` states whether the arrays should be inverted when provided to the Smart Contract
+    // If value is "0", numbers should be inverted, if value is "1", they should stay the same
+    let invertA:boolean = aOriginal[2] == "0";
+    let invertB0: boolean = bOriginal[2][0] == "0";
+    let invertB1: boolean = bOriginal[2][1] == "0";
+    let invertC: boolean = cOriginal[2] == "0";
+
+    const a = [
+      ethers.utils.hexlify(BigNumber.from(aOriginal[invertA ? 1 : 0])),
+      ethers.utils.hexlify(BigNumber.from(aOriginal[invertA ? 0 : 1])),
+    ];
+    const b = [
+      [
+        ethers.utils.hexlify(BigNumber.from(bOriginal[0][invertB0 ? 1 : 0])),
+        ethers.utils.hexlify(BigNumber.from(bOriginal[0][invertB0 ? 0 : 1])),
+      ],
+      [
+        ethers.utils.hexlify(BigNumber.from(bOriginal[1][invertB1 ? 1 : 0])),
+        ethers.utils.hexlify(BigNumber.from(bOriginal[1][invertB1 ? 0 : 1])),
+      ]
+    ]
+    const c = [
+      ethers.utils.hexlify(BigNumber.from(cOriginal[invertC ? 1 : 0])),
+      ethers.utils.hexlify(BigNumber.from(cOriginal[invertC ? 0 : 1])),
+    ]
+    return {
+      a,
+      b,
+      c
+    };
   }
 
   private async requestHeaderProof(inputs: any) {
@@ -96,17 +132,6 @@ export class ProverService {
         Utils.bigIntToArray(bigInts[0]),
         Utils.bigIntToArray(bigInts[1])
       ]);
-    }
-    return result;
-  }
-
-  private static syncCommitteeBytes2bits(syncCommitteeBytes: any): number[] {
-    let result = [];
-    // SyncCommittee Bytes are 64. Cannot get length of BitArray
-    for (let i = 0; i < syncCommitteeBytes.bitLen / 8; i++) {
-      let uint8Bits = syncCommitteeBytes.uint8Array[i].toString(2);
-      uint8Bits = Utils.padBitsToUint8Length(uint8Bits);
-      result = result.concat(uint8Bits.split("").reverse());
     }
     return result;
   }
@@ -160,4 +185,10 @@ export class ProverService {
     ]));
     return ethers.utils.sha256(Buffer.concat([ethers.utils.arrayify(left), ethers.utils.arrayify(right)]));
   }
+}
+
+export type Groth16Proof = {
+  a: string[],
+  b: string[][],
+  c: string[]
 }

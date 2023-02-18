@@ -31,6 +31,7 @@
     "rxjs": "^7.2.0"
   },
   "devDependencies": {
+    "@chainsafe/ssz": "^0.10.1",
     "@lodestar/types": "^1.4.3",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
