@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ProverService } from "../prover/prover.service";
 import { ConfigService } from "@nestjs/config";
-import { Utils } from "../utils";
-import {lodestar} from "../lodestar-types";
+import { Utils } from "../../utils";
+import {lodestar} from "../../lodestar-types";
 
 const BEACON_API_V1 = `/eth/v1/beacon/`;
 const BEACON_API_V2 = `/eth/v2/beacon/`;
@@ -11,7 +10,7 @@ const PUB_KEY_BATCH_SIZE = 100;
 @Injectable()
 export class BeaconService {
   private readonly baseUrl;
-  private readonly logger = new Logger(ProverService.name);
+  private readonly logger = new Logger(BeaconService.name);
 
   // Caches
   private syncCommitteesCache: Map<number, string[]>;

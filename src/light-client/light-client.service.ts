@@ -1,11 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { BeaconService } from "../beacon/beacon.service";
+import { BeaconService } from "./beacon/beacon.service";
 import { altair } from "@lodestar/types";
 import { lodestar } from "../lodestar-types";
 import { createProof, ProofType, SingleProof } from "@chainsafe/persistent-merkle-tree";
 import { ethers } from "ethers";
 import { Utils } from "../utils";
-import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "../prover/prover.service";
+import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "./prover/prover.service";
 
 const NODE_LENGTH = 32;
 
@@ -15,7 +15,7 @@ export class LightClientService {
   private readonly logger = new Logger(LightClientService.name);
   private head: number = 0;
 
-  constructor(private proverService: ProverService, private beaconService: BeaconService) {
+  constructor(private beaconService: BeaconService, private proverService: ProverService, ) {
   }
 
   async processFinalityUpdate(update: altair.LightClientUpdate) {

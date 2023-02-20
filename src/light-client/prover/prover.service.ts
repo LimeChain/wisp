@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { altair } from "@lodestar/types";
 import { BeaconService } from "../beacon/beacon.service";
 import { PointG1, PointG2 } from "@noble/bls12-381";
-import { Utils } from "../utils";
+import { Utils } from "../../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
 

@@ -1,6 +1,6 @@
 import { Body, Controller, Logger, Post } from "@nestjs/common";
 import { altair } from "@lodestar/types";
-import { LightClientService } from "./light-client/light-client.service";
+import { LightClientService } from "./light-client.service";
 
 @Controller("/api/v1")
 export class ApiController {
