@@ -4,7 +4,7 @@ import { altair } from "@lodestar/types";
 import { BeaconService } from "../beacon/beacon.service";
 import { PointG1, PointG2 } from "@noble/bls12-381";
 import { Utils } from "../utils";
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
 
 export const ROOT_BYTE_LENGTH = 32;
@@ -34,7 +34,7 @@ export class ProverService {
    * Requests a ZKP from the ProverAPI
    * @param update
    */
-  async computeHeaderProof(update: altair.LightClientUpdate): Promise<Groth16Proof> {
+  async computeBlsHeaderSignatureProof(update: altair.LightClientUpdate): Promise<Groth16Proof> {
     this.isZKPInProgress = true;
 
     // 1. Prepare the ZKP inputs
@@ -52,50 +52,60 @@ export class ProverService {
     // 2. Request a BLS Header Verify ZKP (takes ~3-4 minutes)
     const proof = await this.requestHeaderProof(blsHeaderVerifyInput);
     this.isZKPInProgress = false;
-    return ProverService.parseProof(proof);
+    return ProverService.parseProof(proof.proof);
   }
 
-  async computeSyncCommitteeProof(update: altair.LightClientUpdate) {
+  async computeSyncCommitteeCommitmentProof(syncCommittee: altair.SyncCommittee) {
+    this.isZKPInProgress = true;
 
+    const pubkeys = [];
+    const pubkeyHex = [];
+    syncCommittee.pubkeys.forEach(pubkey => {
+      const point = PointG1.fromHex(pubkey);
+      const bigInts = Utils.pointToBigInt(point);
+      pubkeys.push([
+        Utils.bigIntToArray(bigInts[0]),
+        Utils.bigIntToArray(bigInts[1])
+      ]);
+      pubkeyHex.push(Utils.hexToIntArray(ethers.utils.hexlify(pubkey)));
+    });
+    const aggregatePubkeyHex = [];
+    syncCommittee.aggregatePubkey.forEach(e => {
+      aggregatePubkeyHex.push(e.toString());
+    });
+    const proofInputs = { pubkeys, pubkeyHex, aggregatePubkeyHex };
+
+    const proof = await this.requestSyncCommitteeProof(proofInputs);
+    this.isZKPInProgress = false;
+    return {
+      proof: ProverService.parseProof(proof.proof),
+      syncCommitteePoseidon: ethers.utils.hexlify(ethers.BigNumber.from(proof["pub_signals"][32]))
+    };
   }
 
-  async requestSyncCommitteeProof(inputs: any) {
+  private async requestSyncCommitteeProof(inputs: any) {
     return this.callProver("ssz2Poseidon", inputs);
   }
 
   private static parseProof(proof: any): Groth16Proof {
-    const aOriginal = proof.proof['pi_a'];
-    const bOriginal = proof.proof['pi_b'];
-    const cOriginal = proof.proof['pi_c'];
-    // The last element of `pi_a` states whether the arrays should be inverted when provided to the Smart Contract
-    // If value is "0", numbers should be inverted, if value is "1", they should stay the same
-    let invertA:boolean = aOriginal[2] == "0";
-    let invertB0: boolean = bOriginal[2][0] == "0";
-    let invertB1: boolean = bOriginal[2][1] == "0";
-    let invertC: boolean = cOriginal[2] == "0";
-
-    const a = [
-      ethers.utils.hexlify(BigNumber.from(aOriginal[invertA ? 1 : 0])),
-      ethers.utils.hexlify(BigNumber.from(aOriginal[invertA ? 0 : 1])),
-    ];
-    const b = [
-      [
-        ethers.utils.hexlify(BigNumber.from(bOriginal[0][invertB0 ? 1 : 0])),
-        ethers.utils.hexlify(BigNumber.from(bOriginal[0][invertB0 ? 0 : 1])),
-      ],
-      [
-        ethers.utils.hexlify(BigNumber.from(bOriginal[1][invertB1 ? 1 : 0])),
-        ethers.utils.hexlify(BigNumber.from(bOriginal[1][invertB1 ? 0 : 1])),
-      ]
-    ]
-    const c = [
-      ethers.utils.hexlify(BigNumber.from(cOriginal[invertC ? 1 : 0])),
-      ethers.utils.hexlify(BigNumber.from(cOriginal[invertC ? 0 : 1])),
-    ]
     return {
-      a,
-      b,
-      c
+      a: [
+        proof["pi_a"][0],
+        proof["pi_a"][1]
+      ],
+      b: [
+        [
+          proof["pi_b"][0][1],
+          proof["pi_b"][0][0]
+        ],
+        [
+          proof["pi_b"][1][1],
+          proof["pi_b"][1][0]
+        ]
+      ], c: [
+        proof["pi_c"][0],
+        proof["pi_c"][1]
+      ]
     };
   }
 

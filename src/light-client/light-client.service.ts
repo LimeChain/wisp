@@ -31,30 +31,17 @@ export class LightClientService {
     }
 
     // 1. Request BLS Header Verify ZKP
-    const headerProofPromise = this.proverService.computeHeaderProof(update);
+    const blsHeaderSignatureProofPromise = this.proverService.computeBlsHeaderSignatureProof(update);
     this.logger.log(`Requested ZKP for BLS Header Verification for slot=${finalizedSlot}`);
 
-    // 2. Request SSZ to Poseidon ZKP if necessary
-    let syncCommitteeProofPromise;
-    if (update.nextSyncCommittee) {
-      this.logger.log(update);
-      syncCommitteeProofPromise = this.proverService.computeSyncCommitteeProof(update);
-      this.logger.log(`Sync Committee Period changed. Requested ZKP for SyncCommittee for period=${Utils.syncCommitteePeriodFor(attestedSlot)}`);
-    } else {
-      syncCommitteeProofPromise = new Promise((resolve) => {
-        resolve(undefined);
-      });
-    }
-
-    // 3. Prepare Header Update
+    // 2. Prepare Header Update
     const lcUpdate = await this.buildLightClientUpdate(update);
 
     // 4. Wait for both ZKPs
-    const proofs = await Promise.all([headerProofPromise, syncCommitteeProofPromise]);
-    lcUpdate.signature.proof = proofs[0];
-    // TODO what do syncCommitteeProof?
+    lcUpdate.signature.proof = await blsHeaderSignatureProofPromise;
 
     this.logger.log(lcUpdate);
+    this.head = finalizedSlot;
     // 5. Broadcast header updates to all on-chain Light Client contracts
   }
 
