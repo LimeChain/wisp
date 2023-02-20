@@ -2,10 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
 import * as request from "supertest";
 import { ConfigModule } from "@nestjs/config";
-import { ApiController } from "../src/api.controller";
+import { ApiController } from "../src/light-client/api.controller";
 import { AppService } from "../src/app.service";
-import { ProverService } from "../src/prover/prover.service";
-import { BeaconService } from "../src/beacon/beacon.service";
+import { ProverService } from "../src/light-client/prover/prover.service";
+import { BeaconService } from "../src/light-client/beacon/beacon.service";
 
 describe("AppController (e2e)", () => {
   let app: INestApplication;
