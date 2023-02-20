@@ -2,6 +2,7 @@ import { PointG1 } from "@noble/bls12-381";
 
 const N: number = 55; // The number of bits to use per register
 const K: number = 7; // The number of registers
+const SLOTS_PER_SYNC_COMMITTEE_PERIOD = 8192;
 
 export namespace Utils {
   export function remove0x(str: string): string {
@@ -71,5 +72,20 @@ export namespace Utils {
       arr.push(sszType[i]);
     }
     return new Uint8Array(arr);
+  }
+
+  export function syncCommitteePeriodFor(slot: number): number {
+    return Math.floor(slot / SLOTS_PER_SYNC_COMMITTEE_PERIOD);
+  }
+
+  export function syncCommitteeBytes2bits(syncCommitteeBytes: any): number[] {
+    let result = [];
+    // SyncCommittee Bytes are 64. Cannot get length of BitArray
+    for (let i = 0; i < syncCommitteeBytes.bitLen / 8; i++) {
+      let uint8Bits = syncCommitteeBytes.uint8Array[i].toString(2);
+      uint8Bits = Utils.padBitsToUint8Length(uint8Bits);
+      result = result.concat(uint8Bits.split("").reverse());
+    }
+    return result.map(e => { return Number(e)})
   }
 }

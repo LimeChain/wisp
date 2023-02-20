@@ -3,13 +3,12 @@ import { ConfigService } from "@nestjs/config";
 import { altair } from "@lodestar/types";
 import { BeaconService } from "../beacon/beacon.service";
 import { PointG1, PointG2 } from "@noble/bls12-381";
-import { Utils } from "../utils";
+import { Utils } from "../../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
-import bigIntToArray = Utils.bigIntToArray;
 
-const ROOT_BYTE_LENGTH = 32;
-const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
+export const ROOT_BYTE_LENGTH = 32;
+export const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
 
 @Injectable()
 export class ProverService {
@@ -17,9 +16,17 @@ export class ProverService {
   private readonly baseUrl;
   private readonly proofEndpoint: string = "/api/v1/proof/generate";
   private readonly logger = new Logger(ProverService.name);
+  private isZKPInProgress: boolean = false;
 
-  constructor(private config: ConfigService, private beaconService: BeaconService) {
+  constructor(private beaconService: BeaconService, private config: ConfigService) {
     this.baseUrl = this.config.get<string>("PROVER_URL");
+  }
+
+  /**
+   * Returns whether the Prover service has a ZKP generation already in progress
+   */
+  hasCapacity(): boolean {
+    return !this.isZKPInProgress;
   }
 
   /**
@@ -27,26 +34,79 @@ export class ProverService {
    * Requests a ZKP from the ProverAPI
    * @param update
    */
-  async computeHeaderProof(update: altair.LightClientFinalityUpdate) {
+  async computeBlsHeaderSignatureProof(update: altair.LightClientUpdate): Promise<Groth16Proof> {
+    this.isZKPInProgress = true;
+
     // 1. Prepare the ZKP inputs
     const syncCommitteePubKeys = await this.beaconService.getSyncCommitteePubKeys(update.signatureSlot);
     const pubkeys = ProverService.pubKeysHex2Int(syncCommitteePubKeys);
-    const pubkeybits = ProverService.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits);
+    const pubkeybits = Utils.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits);
     const signature = ProverService.sig2SnarkInput(update.syncAggregate.syncCommitteeSignature);
     const signingRoot = await this.computeSigningRoot(update);
     const blsHeaderVerifyInput = {
       pubkeys,
       pubkeybits,
       signature,
-      signingRoot
+      signing_root: signingRoot
     };
     // 2. Request a BLS Header Verify ZKP (takes ~3-4 minutes)
-
-    // 3. Return generated ZKP
+    const proof = await this.requestHeaderProof(blsHeaderVerifyInput);
+    this.isZKPInProgress = false;
+    return ProverService.parseProof(proof.proof);
   }
 
-  async requestSyncCommitteeProof(inputs: any) {
+  async computeSyncCommitteeCommitmentProof(syncCommittee: altair.SyncCommittee) {
+    this.isZKPInProgress = true;
+
+    const pubkeys = [];
+    const pubkeyHex = [];
+    syncCommittee.pubkeys.forEach(pubkey => {
+      const point = PointG1.fromHex(pubkey);
+      const bigInts = Utils.pointToBigInt(point);
+      pubkeys.push([
+        Utils.bigIntToArray(bigInts[0]),
+        Utils.bigIntToArray(bigInts[1])
+      ]);
+      pubkeyHex.push(Utils.hexToIntArray(ethers.utils.hexlify(pubkey)));
+    });
+    const aggregatePubkeyHex = [];
+    syncCommittee.aggregatePubkey.forEach(e => {
+      aggregatePubkeyHex.push(e.toString());
+    });
+    const proofInputs = { pubkeys, pubkeyHex, aggregatePubkeyHex };
+
+    const proof = await this.requestSyncCommitteeProof(proofInputs);
+    this.isZKPInProgress = false;
+    return {
+      proof: ProverService.parseProof(proof.proof),
+      syncCommitteePoseidon: ethers.utils.hexlify(ethers.BigNumber.from(proof["pub_signals"][32]))
+    };
+  }
+
+  private async requestSyncCommitteeProof(inputs: any) {
     return this.callProver("ssz2Poseidon", inputs);
+  }
+
+  private static parseProof(proof: any): Groth16Proof {
+    return {
+      a: [
+        proof["pi_a"][0],
+        proof["pi_a"][1]
+      ],
+      b: [
+        [
+          proof["pi_b"][0][1],
+          proof["pi_b"][0][0]
+        ],
+        [
+          proof["pi_b"][1][1],
+          proof["pi_b"][1][0]
+        ]
+      ], c: [
+        proof["pi_c"][0],
+        proof["pi_c"][1]
+      ]
+    };
   }
 
   private async requestHeaderProof(inputs: any) {
@@ -86,28 +146,17 @@ export class ProverService {
     return result;
   }
 
-  private static syncCommitteeBytes2bits(syncCommitteeBytes: any): number[] {
-    let result = [];
-    // SyncCommittee Bytes are 64. Cannot get length of BitArray
-    for (let i = 0; i < syncCommitteeBytes.bitLen / 8; i++) {
-      let uint8Bits = syncCommitteeBytes.uint8Array[i].toString(2);
-      uint8Bits = Utils.padBitsToUint8Length(uint8Bits);
-      result = result.concat(uint8Bits.split("").reverse());
-    }
-    return result;
-  }
-
   private static sig2SnarkInput(signature: any): [string[][], string[][]] {
     const signaturePoint = PointG2.fromSignature(Utils.asUint8Array(signature, AGGREGATE_SIGNATURE_BYTE_LENGTH));
     signaturePoint.assertValidity();
     return [
       [
-        bigIntToArray(signaturePoint.toAffine()[0].c0.value),
-        bigIntToArray(signaturePoint.toAffine()[0].c1.value)
+        Utils.bigIntToArray(signaturePoint.toAffine()[0].c0.value),
+        Utils.bigIntToArray(signaturePoint.toAffine()[0].c1.value)
       ],
       [
-        bigIntToArray(signaturePoint.toAffine()[1].c0.value),
-        bigIntToArray(signaturePoint.toAffine()[1].c1.value)
+        Utils.bigIntToArray(signaturePoint.toAffine()[1].c0.value),
+        Utils.bigIntToArray(signaturePoint.toAffine()[1].c1.value)
       ]
     ];
   }
@@ -146,4 +195,10 @@ export class ProverService {
     ]));
     return ethers.utils.sha256(Buffer.concat([ethers.utils.arrayify(left), ethers.utils.arrayify(right)]));
   }
+}
+
+export type Groth16Proof = {
+  a: string[],
+  b: string[][],
+  c: string[]
 }

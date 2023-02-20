@@ -1,13 +1,12 @@
-import { Module } from '@nestjs/common';
-import { ApiController } from './api.controller';
-import { AppService } from './app.service';
-import { ProverService } from './prover/prover.service';
-import { ConfigModule } from '@nestjs/config';
-import { BeaconService } from './beacon/beacon.service';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { AppService } from "./app.service";
+import { LightClientModule } from './light-client/light-client.module';
 
 @Module({
-  imports: [ConfigModule.forRoot()],
-  controllers: [ApiController],
-  providers: [AppService, ProverService, BeaconService],
+  imports: [ConfigModule.forRoot(), LightClientModule],
+  controllers: [],
+  providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+}

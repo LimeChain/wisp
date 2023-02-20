@@ -2,17 +2,16 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ApiController } from "./api.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
-import { ProverService } from "./prover/prover.service";
-import { BeaconService } from "./beacon/beacon.service";
+import { LightClientService } from "./light-client/light-client.service";
 
 describe("AppController", () => {
   let apiController: ApiController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot()],
+      imports: [ConfigModule.forRoot(), LightClientService],
       controllers: [ApiController],
-      providers: [AppService, ProverService, BeaconService]
+      providers: [AppService]
     }).compile();
 
     apiController = app.get<ApiController>(ApiController);
