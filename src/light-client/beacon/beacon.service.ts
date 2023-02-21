@@ -5,6 +5,7 @@ import {lodestar} from "../../lodestar-types";
 
 const BEACON_API_V1 = `/eth/v1/beacon/`;
 const BEACON_API_V2 = `/eth/v2/beacon/`;
+const BEACON_STATE_API = `/eth/v2/debug/beacon/states`;
 const PUB_KEY_BATCH_SIZE = 100;
 
 @Injectable()
@@ -78,5 +79,16 @@ export class BeaconService {
     const response = await fetch(`${this.baseUrl + BEACON_API_V1}states/${slot}/fork`);
     this.forkVersionCache = (await response.json()).data["current_version"];
     return this.forkVersionCache;
+  }
+
+  /**
+   * Returns the whole Beacon State for a given slot.
+   * Note - the data will be huge ~190MB
+   * @param slot
+   */
+  async getBeaconState(slot: number) {
+    const response = await fetch(`${this.baseUrl + BEACON_STATE_API}/${slot}`);
+    const beaconState = (await response.json())['data'];
+    return lodestar.ssz.bellatrix.BeaconState.fromJson(beaconState);
   }
 }

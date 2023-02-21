@@ -80,12 +80,12 @@ TODO License
 
 **Step 4 (CRC-Relay):**
 
-- [ ] Create SyncCommittee service
-- [ ] Add background job for updating the sync committee
-    - [ ] Get BeaconBlockState from debug endpoint
-    - [ ] Get SyncCommittee and compute `branch`
-- [ ] Call prover to request sync committee commitment proof as-well
-- [ ] Add `syncCommitteeRoot` and `syncCommitteeRootNodes` to `LightClientUpdate` struct or Call Sync Committee Update
+- [X] Create SyncCommittee service
+- [X] Add background job for updating the sync committee
+    - [X] Get BeaconBlockState from debug endpoint
+    - [X] Get SyncCommittee and compute `branch`
+- [X] Call prover to request sync committee commitment proof as-well
+- [X] Add `syncCommitteeRoot` and `syncCommitteeRootNodes` to `LightClientUpdate` struct or Call Sync Committee Update
   directly
 
 **SyncCommittee Algorithm on Startup:**
@@ -122,6 +122,8 @@ TODO License
 - [ ] Modify lodestar to pass finality updates that are received on startup initial sync
 
 **Steps on How to manually compute SyncCommittee**
+TODO to be extracted as a separate CLI command / script
+
 1. create file to store beacon state: `touch goerli-21-feb`
 2. CURL beacon state for slot: 
 ```

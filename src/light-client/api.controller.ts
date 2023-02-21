@@ -12,7 +12,7 @@ export class ApiController {
   @Post("/finality_update")
   finalityUpdate(@Body() body: any) {
     const update = body as altair.LightClientUpdate;
-    this.logger.debug(`Received new finality update for slot=${update.finalizedHeader.beacon.slot}`);
+    this.logger.debug(`Received new finality update for slot = ${update.finalizedHeader.beacon.slot}`);
     const startTime = Date.now();
     // Start the processing asynchronously
     this.lightClientService.processFinalityUpdate(update);
@@ -21,6 +21,6 @@ export class ApiController {
   @Post("/optimistic_update")
   optimisticUpdate(@Body() body: any) {
     const update = body as altair.LightClientUpdate;
-    this.logger.debug(`Received optimistic update for slot=${update.attestedHeader.beacon.slot}. No action will be taken`);
+    this.logger.debug(`Received optimistic update for slot = ${update.attestedHeader.beacon.slot} . No action will be taken`);
   }
 }
