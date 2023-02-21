@@ -120,3 +120,19 @@ TODO License
 **Optional:**
 
 - [ ] Modify lodestar to pass finality updates that are received on startup initial sync
+
+**Steps on How to manually compute SyncCommittee**
+1. create file to store beacon state: `touch goerli-21-feb`
+2. CURL beacon state for slot: 
+```
+curl https://virulent-tiniest-fire.ethereum-goerli.discover.quiknode.pro/31f093d04fba05b99efe109e7cc443f12b282299/eth/v2/debug/beacon/states/5039675 > goerli-21-feb
+```
+3. Open the file and copy the `currentSyncCommittee` object (pubkeys + aggregate pub key);
+4. Paste the object in `main.ts`
+5. Include the following code:
+```typescript
+const sc = lodestar.ssz.altair.SyncCommittee.fromJson(currentSyncCommittee);
+console.log("ROOT", ethers.utils.hexlify(lodestar.ssz.altair.SyncCommittee.hashTreeRoot(sc)));
+const prover = app.get(ProverService);
+prover.computeSyncCommitteeCommitmentProof(sc).then(console.log);
+```

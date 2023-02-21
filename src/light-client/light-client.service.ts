@@ -6,7 +6,7 @@ import { createProof, ProofType, SingleProof } from "@chainsafe/persistent-merkl
 import { ethers } from "ethers";
 import { Utils } from "../utils";
 import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "./prover/prover.service";
-import { BroadcastService } from "./broadcast/broadcast.service";
+import { ContractsService } from "./contracts/contracts.service";
 
 const NODE_LENGTH = 32;
 
@@ -15,11 +15,14 @@ export class LightClientService {
 
   private readonly logger = new Logger(LightClientService.name);
   private head: number = 0;
+  private pendingHeadUpdate: number = 0;
+  private SYNC_COMMITTEE_SIZE: number = 512;
+  private MIN_SYNC_COMMITTEE_PARTICIPATION = Math.ceil(this.SYNC_COMMITTEE_SIZE * 2 / 3);
 
   constructor(
     private beaconService: BeaconService,
     private proverService: ProverService,
-    private broadcastService: BroadcastService
+    private contractsService: ContractsService
   ) {
   }
 
@@ -27,26 +30,41 @@ export class LightClientService {
     const attestedSlot = update.attestedHeader.beacon.slot;
     const finalizedSlot = update.finalizedHeader.beacon.slot;
     if (this.head >= finalizedSlot) {
-      this.logger.log(`Skipping ZKP generation for slot=${finalizedSlot}. Newer finality slot already processed`);
+      this.logger.log(`Skipping Light Client contract update for slot=${finalizedSlot}. Newer finality slot already processed`);
+      return;
+    }
+    if (this.pendingHeadUpdate >= finalizedSlot) {
+      this.logger.debug(`Light Client Finality update already in progress for slot = ${finalizedSlot}`);
       return;
     }
     if (!this.proverService.hasCapacity()) {
-      this.logger.log(`ZKP generation already in progress. Skipping ZKP creation for slot=${finalizedSlot}`);
+      this.logger.log(`Prover does not have capacity. Skipping ZKP creation for slot=${finalizedSlot}`);
+      return;
+    }
+
+    const participation = Utils.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits)
+      .reduce((res, bit) => {
+        return res + bit;
+      });
+    if (participation <= this.MIN_SYNC_COMMITTEE_PARTICIPATION) {
+      this.logger.warn(`Skipping finality update due to low participation. Slot = ${finalizedSlot}, Participation = ${participation}`);
       return;
     }
 
     // 1. Request BLS Header Verify ZKP
     const blsHeaderSignatureProofPromise = this.proverService.computeBlsHeaderSignatureProof(update);
-    this.logger.log(`Requested ZKP for BLS Header Verification for slot=${finalizedSlot}`);
+    this.logger.log(`Requested ZKP for Light Client finality update of slot=${finalizedSlot}`);
+    this.pendingHeadUpdate = finalizedSlot;
 
     // 2. Prepare Header Update
     const lcUpdate = await this.buildLightClientUpdate(update);
 
     // 4. Wait for both ZKPs
     lcUpdate.signature.proof = await blsHeaderSignatureProofPromise;
+    lcUpdate.signature.participation = participation;
 
     // 5. Broadcast header updates to all on-chain Light Client contracts
-    this.broadcastService.broadcast(lcUpdate);
+    this.contractsService.broadcast(lcUpdate);
     // TODO take into account that not all light client contracts are at the same height?
     this.head = finalizedSlot;
   }
@@ -69,11 +87,6 @@ export class LightClientService {
       // TODO compute syncCommitteeRoot and syncCommitteeRootNodes
     }
 
-    const participation = Utils.syncCommitteeBytes2bits(update.syncAggregate.syncCommitteeBits)
-      .reduce((res, bit) => {
-        return res + bit;
-      });
-
     return {
       attestedHeader: LightClientService.asHeaderObject(update.attestedHeader.beacon),
       finalizedHeader: LightClientService.asHeaderObject(update.finalizedHeader.beacon),
@@ -85,7 +98,7 @@ export class LightClientService {
         return ethers.utils.hexlify(Utils.asUint8Array(node, NODE_LENGTH));
       }),
       signature: {
-        participation,
+        participation: 0,
         proof: undefined
       }
     };
