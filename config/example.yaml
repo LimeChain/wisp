@@ -1,0 +1,6 @@
+server:
+  port: 3000
+prover:
+  url: http://localhost:8080
+beaconNode:
+  url: http://localhost:8555

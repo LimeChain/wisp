@@ -6,7 +6,7 @@ import { ProverService } from "./prover/prover.service";
 import { ApiController } from "./api.controller";
 
 @Module({
-  imports: [ConfigModule.forRoot()],
+  imports: [ConfigModule],
   controllers: [ApiController],
   providers: [BeaconService, ProverService, LightClientService],
 })

@@ -18,10 +18,10 @@ $ npm install
 
 **Prerequisite**
 
-Populate the ENV variables
+Copy and example yaml and populate the ENV variables:
 
 ```markdown
-cp example.env .env
+cp ./config/example.yaml ./config/config.yaml
 ```
 
 **Scripts**
@@ -73,7 +73,7 @@ TODO License
 
 **Step 3 (CRC-Relay):**
 
-- [ ] Convert `ENV` to `YAML` config
+- [X] Convert `ENV` to `YAML` config
     - [ ] Add config for on-chain-light-clients: `contractAddress`, `pk`, `rpcUrl`
 - [ ] Add `broadcast` service
     - [ ] is able to broadcast to every on-chain-lightclient the finalized header update
