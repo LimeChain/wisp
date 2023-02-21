@@ -1,0 +1,872 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "genesisValidatorsRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "genesisTime",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "secondsPerSlot",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes4",
+                "name": "forkVersion",
+                "type": "bytes4"
+            },
+            {
+                "internalType": "uint256",
+                "name": "startSyncCommitteePeriod",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "startSyncCommitteeRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "startSyncCommitteePoseidon",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "slot",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "root",
+                "type": "bytes32"
+            }
+        ],
+        "name": "HeadUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "slot",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "root",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "participation",
+                "type": "uint256"
+            }
+        ],
+        "name": "OptimisticHeadUpdate",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "period",
+                "type": "uint256"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "root",
+                "type": "bytes32"
+            }
+        ],
+        "name": "SyncCommitteeUpdate",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "GENESIS_TIME",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "GENESIS_VALIDATORS_ROOT",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SECONDS_PER_SLOT",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "active",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "defaultForkVersion",
+        "outputs": [
+            {
+                "internalType": "bytes4",
+                "name": "",
+                "type": "bytes4"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "slot",
+                "type": "uint64"
+            }
+        ],
+        "name": "executionStateRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "name": "executionStateRoots",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "forceUpdate",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "head",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "name": "headers",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "slot",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "proposerIndex",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "parentRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "bodyRoot",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticExecutionStateRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticHeader",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "slot",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "proposerIndex",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "parentRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "bodyRoot",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticNextSyncCommitteePoseidon",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticNextSyncCommitteeRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticParticipation",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "optimisticTimeout",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bool",
+                "name": "newActive",
+                "type": "bool"
+            }
+        ],
+        "name": "setActive",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes4",
+                "name": "forkVersion",
+                "type": "bytes4"
+            }
+        ],
+        "name": "setDefaultForkVersion",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "sszToPoseidon",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "slot",
+                "type": "uint64"
+            }
+        ],
+        "name": "stateRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "attestedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "finalizedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "finalityBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "nextSyncCommitteeRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "nextSyncCommitteeBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "executionStateRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "executionStateRootBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "participation",
+                                "type": "uint64"
+                            },
+                            {
+                                "components": [
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "a",
+                                        "type": "uint256[2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2][2]",
+                                        "name": "b",
+                                        "type": "uint256[2][2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "c",
+                                        "type": "uint256[2]"
+                                    }
+                                ],
+                                "internalType": "struct Groth16Proof",
+                                "name": "proof",
+                                "type": "tuple"
+                            }
+                        ],
+                        "internalType": "struct BLSAggregatedSignature",
+                        "name": "signature",
+                        "type": "tuple"
+                    }
+                ],
+                "internalType": "struct LightClientUpdate",
+                "name": "update",
+                "type": "tuple"
+            }
+        ],
+        "name": "step",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "syncCommitteeRootByPeriod",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "attestedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "finalizedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "finalityBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "nextSyncCommitteeRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "nextSyncCommitteeBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "executionStateRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "executionStateRootBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "participation",
+                                "type": "uint64"
+                            },
+                            {
+                                "components": [
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "a",
+                                        "type": "uint256[2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2][2]",
+                                        "name": "b",
+                                        "type": "uint256[2][2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "c",
+                                        "type": "uint256[2]"
+                                    }
+                                ],
+                                "internalType": "struct Groth16Proof",
+                                "name": "proof",
+                                "type": "tuple"
+                            }
+                        ],
+                        "internalType": "struct BLSAggregatedSignature",
+                        "name": "signature",
+                        "type": "tuple"
+                    }
+                ],
+                "internalType": "struct LightClientUpdate",
+                "name": "update",
+                "type": "tuple"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "nextSyncCommitteePoseidon",
+                "type": "bytes32"
+            },
+            {
+                "components": [
+                    {
+                        "internalType": "uint256[2]",
+                        "name": "a",
+                        "type": "uint256[2]"
+                    },
+                    {
+                        "internalType": "uint256[2][2]",
+                        "name": "b",
+                        "type": "uint256[2][2]"
+                    },
+                    {
+                        "internalType": "uint256[2]",
+                        "name": "c",
+                        "type": "uint256[2]"
+                    }
+                ],
+                "internalType": "struct Groth16Proof",
+                "name": "commitmentMappingProof",
+                "type": "tuple"
+            }
+        ],
+        "name": "updateSyncCommittee",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256[2]",
+                "name": "a",
+                "type": "uint256[2]"
+            },
+            {
+                "internalType": "uint256[2][2]",
+                "name": "b",
+                "type": "uint256[2][2]"
+            },
+            {
+                "internalType": "uint256[2]",
+                "name": "c",
+                "type": "uint256[2]"
+            },
+            {
+                "internalType": "uint256[33]",
+                "name": "input",
+                "type": "uint256[33]"
+            }
+        ],
+        "name": "verifyCommitmentMappingProof",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "r",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256[2]",
+                "name": "a",
+                "type": "uint256[2]"
+            },
+            {
+                "internalType": "uint256[2][2]",
+                "name": "b",
+                "type": "uint256[2][2]"
+            },
+            {
+                "internalType": "uint256[2]",
+                "name": "c",
+                "type": "uint256[2]"
+            },
+            {
+                "internalType": "uint256[34]",
+                "name": "input",
+                "type": "uint256[34]"
+            }
+        ],
+        "name": "verifySignatureProof",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "r",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

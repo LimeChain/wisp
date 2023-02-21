@@ -6,6 +6,7 @@ import { createProof, ProofType, SingleProof } from "@chainsafe/persistent-merkl
 import { ethers } from "ethers";
 import { Utils } from "../utils";
 import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "./prover/prover.service";
+import { BroadcastService } from "./broadcast/broadcast.service";
 
 const NODE_LENGTH = 32;
 
@@ -15,7 +16,11 @@ export class LightClientService {
   private readonly logger = new Logger(LightClientService.name);
   private head: number = 0;
 
-  constructor(private beaconService: BeaconService, private proverService: ProverService, ) {
+  constructor(
+    private beaconService: BeaconService,
+    private proverService: ProverService,
+    private broadcastService: BroadcastService
+  ) {
   }
 
   async processFinalityUpdate(update: altair.LightClientUpdate) {
@@ -40,9 +45,10 @@ export class LightClientService {
     // 4. Wait for both ZKPs
     lcUpdate.signature.proof = await blsHeaderSignatureProofPromise;
 
-    this.logger.log(lcUpdate);
-    this.head = finalizedSlot;
     // 5. Broadcast header updates to all on-chain Light Client contracts
+    this.broadcastService.broadcast(lcUpdate);
+    // TODO take into account that not all light client contracts are at the same height?
+    this.head = finalizedSlot;
   }
 
   private async buildLightClientUpdate(update: altair.LightClientUpdate): Promise<LightClientUpdate> {
@@ -73,7 +79,7 @@ export class LightClientService {
       finalizedHeader: LightClientService.asHeaderObject(update.finalizedHeader.beacon),
       executionStateRoot: ethers.utils.hexlify(finalizedBeaconBody.executionPayload.stateRoot),
       executionStateRootBranch,
-      nextSyncCommitteeRoot: "", // TODO
+      nextSyncCommitteeRoot: ethers.constants.HashZero, // TODO
       nextSyncCommitteeBranch: [], // TODO
       finalityBranch: update.finalityBranch.map(node => {
         return ethers.utils.hexlify(Utils.asUint8Array(node, NODE_LENGTH));
@@ -96,7 +102,7 @@ export class LightClientService {
   }
 }
 
-type LightClientUpdate = {
+export type LightClientUpdate = {
   attestedHeader: Header,
   finalizedHeader: Header,
   finalityBranch: string[],

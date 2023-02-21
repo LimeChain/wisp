@@ -1,6 +1,12 @@
 server:
   port: 3000
-prover:
-  url: http://localhost:8080
-beaconNode:
-  url: http://localhost:8555
+lightClient:
+  beaconNode:
+    url: http://localhost:8551
+  prover:
+    url: http://localhost:8080
+  networks:
+    - name: 'Polygon zkEVM'
+      rpcUrl: https://rpc.public.zkevm-test.net
+      contractAddress: 0x7106281bea5124b3dab4181d029eb982b3c43cfa
+      privateKey:
