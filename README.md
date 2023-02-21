@@ -65,7 +65,7 @@ TODO License
 
 **Step 2 (Contracts):**
 
-- [ ] Deploy the Contracts (PolygonZKEVM)
+- [X] Deploy the Contracts (PolygonZKEVM)
     - [X] Script for computing current `ssz` `syncCommitteeRoot` <---
     - [X] Script for computing current `ssz` `syncCommitteeRootPoseidon`
     - [X] Deploy script
@@ -74,9 +74,9 @@ TODO License
 **Step 3 (CRC-Relay):**
 
 - [X] Convert `ENV` to `YAML` config
-    - [ ] Add config for on-chain-light-clients: `contractAddress`, `pk`, `rpcUrl`
-- [ ] Add `broadcast` service
-    - [ ] is able to broadcast to every on-chain-lightclient the finalized header update
+    - [X] Add config for on-chain-light-clients: `contractAddress`, `pk`, `rpcUrl`
+- [X] Add `broadcast` service
+    - [X] is able to broadcast to every on-chain-lightclient the finalized header update
 
 **Step 4 (CRC-Relay):**
 
