@@ -1,7 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
+import { MessageRelayerService } from './message-relayer/message-relayer.service';
 
 @Injectable()
 export class AppService {
-  constructor() {
+  constructor(private readonly messageRelayService: MessageRelayerService) {
+    this.messageRelayService.init();
   }
 }
