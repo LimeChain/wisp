@@ -28,6 +28,12 @@ import {
       imports: [DatabaseModule],
       useExisting: DatabaseService,
     }),
+    MongooseModule.forFeature([
+      {
+        name: Messages.name,
+        schema: MessagesSchema,
+      },
+    ]),
   ],
   controllers: [],
   providers: [
