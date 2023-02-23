@@ -1,6 +1,6 @@
 import { Contract, ethers } from 'ethers';
 import * as Outbox from '../../../abis/Outbox.json';
-import { GOERLY_RPC_ENDPOINT, OUTBOX_CONTRACT } from '../constants';
+import { GOERLI_OPTIMISM_RPC_ENDPOINT, OUTBOX_CONTRACT } from '../../constants';
 
 export class ContractService {
   constructor(
@@ -8,8 +8,9 @@ export class ContractService {
     private readonly provider: any,
   ) {
     this.provider = new ethers.providers.JsonRpcProvider(
-      GOERLY_RPC_ENDPOINT,
+      GOERLI_OPTIMISM_RPC_ENDPOINT,
     ) as ethers.providers.Web3Provider;
+
     this.outboxContract = new ethers.Contract(
       OUTBOX_CONTRACT,
       Outbox,

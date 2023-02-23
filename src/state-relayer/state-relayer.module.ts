@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ContractService } from './contracts/contracts.service';
-import { MessageRelayerService } from './message-relayer.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Messages, MessagesSchema } from 'src/database/schemas/message.schema';
+import { DATA_LAYER_SERVICE } from 'src/constants';
 import { DataLayerService } from 'src/data-layer/data-layer.service';
-import { DATA_LAYER_SERVICE } from '../constants';
+import { Messages, MessagesSchema } from 'src/database/schemas/message.schema';
+import { ContractService } from './contracts/contracts.service';
+import { StateRelayerService } from './state-relayer.service';
 
 @Module({
   imports: [
@@ -16,7 +16,7 @@ import { DATA_LAYER_SERVICE } from '../constants';
     ]),
   ],
   providers: [
-    MessageRelayerService,
+    StateRelayerService,
     ContractService,
     {
       useClass: DataLayerService,
@@ -24,4 +24,4 @@ import { DATA_LAYER_SERVICE } from '../constants';
     },
   ],
 })
-export class MessageRelayerModule {}
+export class StateRelayerModule {}

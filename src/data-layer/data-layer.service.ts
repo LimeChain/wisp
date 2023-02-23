@@ -14,7 +14,22 @@ export class DataLayerService implements IDataLayer {
     @InjectModel(Messages.name)
     private readonly messagesModel: Model<MessagesDocument>,
   ) {}
+
   async createMessage(message: MessageDTO) {
-    return this.messagesModel.create(message);
+    return await this.messagesModel.create(message);
+  }
+
+  async updateMessages(_L1BlockNumber: number) {
+    return await this.messagesModel.updateMany(
+      {
+        L1BlockNumber: null,
+        OptimismBlockNumber: { $lte: _L1BlockNumber },
+      },
+      {
+        $set: {
+          L1BlockNumber: _L1BlockNumber,
+        },
+      },
+    );
   }
 }

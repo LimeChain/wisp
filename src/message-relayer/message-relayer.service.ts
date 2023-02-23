@@ -1,7 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DATA_LAYER_SERVICE, EVENT_MESSAGE_SENT } from './constants';
+import { DATA_LAYER_SERVICE, EVENT_MESSAGE_SENT } from '../constants';
 import { ContractService } from './contracts/contracts.service';
 import { IDataLayer } from 'src/data-layer/IDataLayer';
+import { MessageDTO } from './dtos/message.dto';
 
 @Injectable()
 export class MessageRelayerService {
@@ -18,12 +19,14 @@ export class MessageRelayerService {
     const outboxContract = this.contractService.getContract();
     outboxContract.on(EVENT_MESSAGE_SENT, async (...args) => {
       const tx = args[args.length - 1];
-      const message = {
-        blockNumber: tx.blockNumber,
+      const message: MessageDTO = {
+        OptimismBlockNumber: tx.blockNumber,
         from: tx.args.sender,
         destinationChainId: tx.args.destinationChainId,
         messageHash: tx.args.hash,
         messageIndex: tx.args.messageIndex,
+        L1BlockNumber: null,
+        sent: false,
       };
 
       this.dataLayerService.createMessage(message);
