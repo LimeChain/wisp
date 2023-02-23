@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LightClientRelayService } from './light-client-service.service';
+import { LightClientRelayService } from './light-client-relayer.service';
 
 describe('LightClientRelayService', () => {
   let service: LightClientRelayService;
