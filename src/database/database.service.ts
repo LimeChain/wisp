@@ -11,13 +11,13 @@ import { ConfigService } from '@nestjs/config';
 export class DatabaseService implements MongooseOptionsFactory {
   constructor(private configService: ConfigService) {}
   createMongooseOptions(): MongooseModuleOptions {
-    // const uri: string = process.env.MONGODB_URI;
-    // if (!uri) {
-    //   throw new Error('MongoDB URI is not defined');
-    // }
+    const uri: string = this.configService.get('mongodb.uri');
+    if (!uri) {
+      throw new Error('MongoDB URI is not defined');
+    }
 
     return {
-      uri: '',
+      uri,
       useNewUrlParser: true,
       useUnifiedTopology: true,
       connectionFactory: (connection: Connection) => {
