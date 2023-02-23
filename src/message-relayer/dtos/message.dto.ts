@@ -2,6 +2,24 @@ import { IsNumber, IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class MessageDTO {
   @IsNumber()
+  version: number;
+
+  @IsNumber()
+  nonce: number;
+
+  @IsString()
+  initialCaller: string;
+
+  @IsString()
+  payload: string;
+
+  @IsString()
+  extra: string;
+
+  // stateRelayFee: number;
+  // deliveryFee: number;
+
+  @IsNumber()
   OptimismBlockNumber: number;
 
   @IsString()

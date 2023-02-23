@@ -4,12 +4,15 @@ export const GOERLI_RPC_ENDPOINT =
   'https://goerli.infura.io/v3/7b3a0fd342104fc9a42e32019a6abd9a';
 
 // Contract addresses
-export const OUTBOX_CONTRACT = '0xcA7B05255F52C700AE25C278DdB03C02459F7AE8';
+export const OUTBOX_CONTRACT = '0x29dF862a0ff634C12a5e4583bA99ef0f501838b6';
 export const OUTPUT_ORACLE_CONTRACT =
   '0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0';
+export const LIGHT_CLIENT_CONTRACT =
+  '0xE1f59f6b5b9A08E99535E088121ED6E977B0DFb7';
 
 // Contract events
 export const EVENT_MESSAGE_SENT = 'MessageSent';
 export const EVENT_OUTPUT_PROPOSED = 'OutputProposed';
+export const HEAD_UPDATE = 'HeadUpdate';
 
 export const DATA_LAYER_SERVICE = 'DATA LAYER SERVICE';

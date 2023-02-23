@@ -33,6 +33,72 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getMessageByIndex",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint8",
+            "name": "version",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "target",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "payload",
+            "type": "bytes"
+          },
+          {
+            "internalType": "uint256",
+            "name": "stateRelayFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deliveryFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "extra",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct Types.CRCMessage",
+        "name": "message",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
@@ -87,6 +153,65 @@
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "rawMessages",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "payload",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "stateRelayFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deliveryFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "extra",
+        "type": "bytes"
       }
     ],
     "stateMutability": "view",

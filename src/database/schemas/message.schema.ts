@@ -5,6 +5,23 @@ import { Document } from 'mongoose';
 @Schema({ timestamps: true, collection: 'messages' })
 export class Messages {
   @Prop({ required: true })
+  public version: number;
+
+  @Prop({ required: true })
+  public nonce: number;
+
+  @Prop({ required: true })
+  public initialCaller: string;
+
+  @Prop({ required: true })
+  public payload: string;
+
+  @Prop({ required: true })
+  public extra: string;
+
+  // stateRelayFee: number;
+  // deliveryFee: number;
+  @Prop({ required: true })
   public OptimismBlockNumber: number;
 
   @Prop({ required: true })

@@ -19,7 +19,25 @@ export class MessageRelayerService {
     const outboxContract = this.contractService.getContract();
     outboxContract.on(EVENT_MESSAGE_SENT, async (...args) => {
       const tx = args[args.length - 1];
+
+      const {
+        version,
+        nonce,
+        user,
+        payload,
+        extra,
+        stateRelayFee,
+        deliveryFee,
+      } = await outboxContract.getMessageByIndex(tx.args.messageIndex);
+
       const message: MessageDTO = {
+        version,
+        nonce,
+        initialCaller: user,
+        payload,
+        extra,
+        // stateRelayFee,
+        // deliveryFee,
         OptimismBlockNumber: tx.blockNumber,
         from: tx.args.sender,
         destinationChainId: tx.args.destinationChainId,
