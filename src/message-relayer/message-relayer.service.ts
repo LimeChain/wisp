@@ -1,11 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EVENT_MESSAGE_SENT } from './config';
 import { ContractService } from './contracts/contracts.service';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  Messages,
+  MessagesDocument,
+} from 'src/database/schemas/message.schema';
+import { Model, Types } from 'mongoose';
+import { IDataLayer } from 'src/data-layer/IDataLayer';
 
 @Injectable()
 export class MessageRelayerService {
   private readonly logger = new Logger(MessageRelayerService.name);
-  constructor(private contractService: ContractService) {}
+  constructor(
+    @Inject('DATA LAYER SERVICE')
+    private readonly dataLayerService: IDataLayer,
+    private contractService: ContractService,
+  ) {}
 
   async init() {
     this.logger.log(`${MessageRelayerService.name} initialized`);
@@ -20,6 +31,7 @@ export class MessageRelayerService {
         messageHash: tx.args.hash,
         messageIndex: tx.args.messageIndex,
       });
+
       this.logger.log(`Messages: ${JSON.stringify(mockDB)}`);
     });
   }
