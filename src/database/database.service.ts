@@ -21,7 +21,8 @@ export class DatabaseService implements MongooseOptionsFactory {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       connectionFactory: (connection: Connection) => {
-        connection.plugin(uniqueValidator);
+        // console.log(uniqueValidator);
+        // connection.plugin(uniqueValidator);
         return connection;
       },
     };

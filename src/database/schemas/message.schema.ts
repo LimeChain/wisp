@@ -4,8 +4,20 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true, collection: 'messages' })
 export class Messages {
-  @Prop({ trim: true, required: true })
-  public blockNumber: string;
+  @Prop({ required: true })
+  public blockNumber: number;
+
+  @Prop({ required: true })
+  public from: string;
+
+  @Prop({ required: true })
+  public destinationChainId: number;
+
+  @Prop({ required: true, unique: true })
+  public messageHash: string;
+
+  @Prop({ required: true })
+  public messageIndex: number;
 }
 
 export type MessagesDocument = Messages & Document;

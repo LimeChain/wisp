@@ -1,6 +1,6 @@
 import { Contract, ethers } from 'ethers';
 import * as Outbox from '../../../abis/Outbox.json';
-import { GOERLY_RPC_ENDPOINT, OUTBOX_CONTRACT } from '../config';
+import { GOERLY_RPC_ENDPOINT, OUTBOX_CONTRACT } from '../constants';
 
 export class ContractService {
   constructor(

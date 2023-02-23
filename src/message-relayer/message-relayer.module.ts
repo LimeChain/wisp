@@ -4,6 +4,7 @@ import { MessageRelayerService } from './message-relayer.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Messages, MessagesSchema } from 'src/database/schemas/message.schema';
 import { DataLayerService } from 'src/data-layer/data-layer.service';
+import { DATA_LAYER_SERVICE } from './constants';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { DataLayerService } from 'src/data-layer/data-layer.service';
     ContractService,
     {
       useClass: DataLayerService,
-      provide: 'DATA LAYER SERVICE',
+      provide: DATA_LAYER_SERVICE,
     },
   ],
 })

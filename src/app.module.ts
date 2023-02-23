@@ -10,12 +10,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseService } from './database/database.service';
 import { DatabaseModule } from './database/database.module';
 import { DataLayerService } from './data-layer/data-layer.service';
-import { DataLayerModule } from './data-layer/data-layer.module';
-import {
-  Messages,
-  MessagesSchema,
-  MessagesDocument,
-} from './database/schemas/message.schema';
+import { Messages, MessagesSchema } from './database/schemas/message.schema';
+import { DATA_LAYER_SERVICE } from './message-relayer/constants';
 
 @Module({
   imports: [
@@ -42,7 +38,7 @@ import {
     ContractService,
     {
       useClass: DataLayerService,
-      provide: 'DATA LAYER SERVICE',
+      provide: DATA_LAYER_SERVICE,
     },
   ],
 })
