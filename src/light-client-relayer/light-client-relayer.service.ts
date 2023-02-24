@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HEAD_UPDATE } from 'src/constants';
+import {
+  GOERLI_OPTIMISM_RPC_ENDPOINT,
+  GOERLI_RPC_ENDPOINT,
+  HEAD_UPDATE,
+} from 'src/constants';
 import { ContractService } from './contracts/contracts.service';
+import * as Extractoor from 'extractoor';
 
 @Injectable()
 export class LightClientRelayService {
@@ -10,13 +15,20 @@ export class LightClientRelayService {
   async init() {
     this.logger.log(`${LightClientRelayService.name} initialized`);
 
+    const fetcher = new Extractoor.OptimismExtractoorClient(
+      GOERLI_OPTIMISM_RPC_ENDPOINT,
+      GOERLI_RPC_ENDPOINT,
+    );
+
     const lightClientContract = this.contractService.getContract();
-    console.log(lightClientContract);
     lightClientContract.on(HEAD_UPDATE, async (...args) => {
       const tx = args[args.length - 1];
-      console.log(tx);
+      const newBlockHeaderNumber = tx.args.blockNumber.toNumber();
+      const L1BlockNumber = tx.blockNumber;
 
-      //this.logger.log(`Messages: ${JSON.stringify(message)}}`);
+      if (newBlockHeaderNumber >= L1BlockNumber) {
+        console.log('Trigger receiving flow here');
+      }
     });
   }
 }

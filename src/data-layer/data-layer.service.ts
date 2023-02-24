@@ -32,4 +32,8 @@ export class DataLayerService implements IDataLayer {
       },
     );
   }
+
+  async getMessages() {
+    return this.messagesModel.find();
+  }
 }
