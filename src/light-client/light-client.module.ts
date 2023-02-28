@@ -14,8 +14,10 @@ import { LightClientContract } from "./light-client-contract";
   providers: [BeaconService, ProverService, LightClientService, {
     provide: "LightClients",
     useFactory: (config: ConfigService, eventEmitter: EventEmitter2) => {
-      return config.get<NetworkConfig[]>("lightClient.networks")
-        .map((networkConfig: NetworkConfig) => new LightClientContract(networkConfig, eventEmitter));
+      // Instantiate LightClient contracts for rollups that support outgoing communication
+      return config.get<NetworkConfig[]>("networks.rollups")
+        .filter(config => config.outgoing.supported)
+        .map(config => new LightClientContract(config, eventEmitter));
     },
     inject: [ConfigService, EventEmitter2]
   }]

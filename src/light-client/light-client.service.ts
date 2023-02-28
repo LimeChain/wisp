@@ -10,7 +10,7 @@ import { ConfigService } from "@nestjs/config";
 import { Events } from "../events/events";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { LightClientContract } from "./light-client-contract";
-import { Header, LightClientUpdate } from "../model";
+import { Header, LightClientUpdate } from "../models";
 import {
   MIN_SYNC_COMMITTEE_PARTICIPATION,
   ROOT_BYTE_LENGTH,

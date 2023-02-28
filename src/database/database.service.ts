@@ -4,7 +4,6 @@ import {
   MongooseOptionsFactory,
 } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import uniqueValidator from 'mongoose-unique-validator';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -12,7 +11,7 @@ export class DatabaseService implements MongooseOptionsFactory {
   constructor(private configService: ConfigService) {}
 
   createMongooseOptions(): MongooseModuleOptions {
-    const uri: string = this.configService.get('mongodb.uri');
+    const uri: string = this.configService.get('messageRelayer.mongodb.uri');
     if (!uri) {
       throw new Error('MongoDB URI is not defined');
     }
@@ -22,8 +21,6 @@ export class DatabaseService implements MongooseOptionsFactory {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       connectionFactory: (connection: Connection) => {
-        // console.log(uniqueValidator);
-        // connection.plugin(uniqueValidator);
         return connection;
       },
     };

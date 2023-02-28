@@ -6,7 +6,7 @@ import { PointG1, PointG2 } from "@noble/bls12-381";
 import { Utils } from "../../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
-import { Groth16Proof } from "../../model";
+import { Groth16Proof } from "../../models";
 import { AGGREGATE_SIGNATURE_BYTE_LENGTH, ROOT_BYTE_LENGTH } from "../../constants/constants";
 
 @Injectable()

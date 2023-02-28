@@ -34,7 +34,6 @@
     "extractoor": "^0.1.2",
     "js-yaml": "^4.1.0",
     "mongoose": "^6.10.0",
-    "mongoose-unique-validator": "^3.1.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0"
   },
@@ -47,7 +46,6 @@
     "@types/express": "^4.17.13",
     "@types/jest": "29.2.4",
     "@types/js-yaml": "^4.0.5",
-    "@types/mongoose-unique-validator": "^1.0.7",
     "@types/node": "18.11.18",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",

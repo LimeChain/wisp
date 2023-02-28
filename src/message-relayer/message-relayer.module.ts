@@ -1,44 +1,40 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Messages, MessagesSchema } from 'src/database/schemas/message.schema';
-import { DataLayerService } from 'src/data-layer/data-layer.service';
-import { MessageListener } from './services/message-listener/message-listener.service';
-import { RollupListener } from './services/rollup-listener/rollup-listener.service';
-import { LightClientListener } from './services/light-client-listener/light-client-listener.service';
-import { ConfigService } from '@nestjs/config';
-import { IDataLayer } from '../data-layer/IDataLayer';
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Messages, MessagesSchema } from "src/database/schemas/message.schema";
+import { DataLayerService } from "src/data-layer/data-layer.service";
+import { MessageListener } from "./services/message-listener/message-listener.service";
+import { RollupListener } from "./services/rollup-listener/rollup-listener.service";
+import { ConfigService } from "@nestjs/config";
+import { IDataLayer } from "../data-layer/IDataLayer";
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       {
         name: Messages.name,
-        schema: MessagesSchema,
-      },
-    ]),
+        schema: MessagesSchema
+      }
+    ])
   ],
   providers: [
     {
-      provide: 'OutboxContracts',
+      provide: "OutboxContracts",
       useFactory: (config: ConfigService, dataLayer: IDataLayer) => {
-        return config
-          .get('rollups')
-          .map((rollup) => new MessageListener(dataLayer, rollup));
+        return config.get("networks.rollups").map((rollup) => new MessageListener(dataLayer, rollup));
       },
-      inject: [ConfigService, DataLayerService],
+      inject: [ConfigService, DataLayerService]
     },
     {
-      provide: 'RollupContracts',
+      provide: "RollupContracts",
       useFactory: (config: ConfigService, dataLayer: IDataLayer) => {
-        return config
-          .get('rollups')
-          .map((rollup) => new RollupListener(dataLayer, rollup));
+        return config.get("networks.rollups").map((rollup) => new RollupListener(dataLayer, rollup, config.get("networks.l1.executionNode")));
       },
-      inject: [ConfigService, DataLayerService],
+      inject: [ConfigService, DataLayerService]
     },
     //LightClientListener,
     ConfigService,
-    DataLayerService,
-  ],
+    DataLayerService
+  ]
 })
-export class MessageRelayerModule {}
+export class MessageRelayerModule {
+}

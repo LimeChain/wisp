@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DATA_LAYER_SERVICE, EVENT_MESSAGE_SENT } from '../../../constants';
 import { IDataLayer } from 'src/data-layer/IDataLayer';
-import { MessageDTO } from './../../dtos/message.dto';
+import { MessageDTO } from "../../dtos/message.dto";
 import * as Outbox from '../../../../abis/Outbox.json';
 import { Contract, ethers } from 'ethers';
 

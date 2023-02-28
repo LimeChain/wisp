@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { NetworkConfig } from "../configuration";
 import { Events } from "../events/events";
-import { Groth16Proof, LightClientUpdate } from "../model";
+import { Groth16Proof, LightClientUpdate } from "../models";
 import { Utils } from "../utils";
 
 @Injectable()
@@ -26,7 +26,7 @@ export class LightClientContract {
     // Initialise Light Client instance
     const provider = new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
     const signer = new ethers.Wallet(networkConfig.privateKey, provider);
-    this.lightClient = new ethers.Contract(networkConfig.contractAddress, BeaconLightClientABI, signer);
+    this.lightClient = new ethers.Contract(networkConfig.outgoing.lightClientContract, BeaconLightClientABI, signer);
 
     // Subscribe to events
     this.eventEmitter.on(Events.LIGHT_CLIENT_HEAD_UPDATE, this.onUpdate.bind(this));
