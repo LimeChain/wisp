@@ -9,7 +9,7 @@ import { ProverService } from "./prover/prover.service";
 import { ConfigService } from "@nestjs/config";
 import { Events } from "../events/events";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { LightClientContract } from "./contract/light-client-contract.service";
+import { LightClientContract } from "./light-client-contract";
 import { Header, LightClientUpdate } from "../model";
 import {
   MIN_SYNC_COMMITTEE_PARTICIPATION,

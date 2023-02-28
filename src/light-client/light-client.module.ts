@@ -6,7 +6,7 @@ import { ProverService } from "./prover/prover.service";
 import { ApiController } from "./api.controller";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { NetworkConfig } from "../configuration";
-import { LightClientContract } from "./contract/light-client-contract.service";
+import { LightClientContract } from "./light-client-contract";
 
 @Module({
   imports: [ConfigModule, EventEmitterModule.forRoot()],

@@ -1,11 +1,11 @@
 import { Contract, ethers } from "ethers";
-import * as BeaconLightClientABI from "../../../abis/BeaconLightClient.json";
+import * as BeaconLightClientABI from "../../abis/BeaconLightClient.json";
 import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { NetworkConfig } from "../../configuration";
-import { Events } from "../../events/events";
-import { Groth16Proof, LightClientUpdate } from "../../model";
-import { Utils } from "../../utils";
+import { NetworkConfig } from "../configuration";
+import { Events } from "../events/events";
+import { Groth16Proof, LightClientUpdate } from "../model";
+import { Utils } from "../utils";
 
 @Injectable()
 export class LightClientContract {
