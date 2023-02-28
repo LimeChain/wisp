@@ -9,3 +9,20 @@ export default () => {
     readFileSync(join(__dirname, YAML_CONFIG_FILENAME), 'utf8'),
   ) as Record<string, any>;
 };
+
+export type NetworkConfig = {
+  name: string,
+  rpcUrl: string,
+  chainId: number,
+  privateKey: string
+  incoming: {
+    supported: boolean
+    inboxContract: string
+  },
+  outgoing: {
+    supported: boolean
+    l1RollupContract: string
+    outboxContract: string
+    lightClientContract: string
+  }
+}

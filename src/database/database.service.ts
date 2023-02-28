@@ -4,7 +4,6 @@ import {
   MongooseOptionsFactory,
 } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import uniqueValidator from 'mongoose-unique-validator';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -22,8 +21,6 @@ export class DatabaseService implements MongooseOptionsFactory {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       connectionFactory: (connection: Connection) => {
-        // console.log(uniqueValidator);
-        // connection.plugin(uniqueValidator);
         return connection;
       },
     };

@@ -21,7 +21,7 @@ export class BeaconService {
   private forkVersionCache: string;
 
   constructor(private config: ConfigService) {
-    this.baseUrl = this.config.get<string>("lightClient.beaconNode.url");
+    this.baseUrl = this.config.get<string>("networks.l1.consensusNode.url");
     this.syncCommitteesCache = new Map<number, string[]>();
   }
 
