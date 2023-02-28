@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER_SERVICE, EVENT_OUTPUT_PROPOSED } from "../../../constants";
+import { DATA_LAYER_SERVICE } from "../../../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
 import { Contract, ethers } from "ethers";
 import * as L1RollupStateContract from "../../../../abis/Optimism/OutputOracle.json";
@@ -24,7 +24,7 @@ export class RollupListener {
     this.l1RollupState = new ethers.Contract(networkConfig.outgoing.l1RollupContract, L1RollupStateContract, provider);
 
     // Subscribe to rollup state update event
-    this.l1RollupState.on('OutputProposed', this.onNewBatchPosted.bind(this));
+    this.l1RollupState.on("OutputProposed", this.onNewBatchPosted.bind(this));
     this.logger.log(`Instantiated contract at ${this.l1RollupState.address}`);
   }
 
