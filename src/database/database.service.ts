@@ -11,7 +11,7 @@ export class DatabaseService implements MongooseOptionsFactory {
   constructor(private configService: ConfigService) {}
 
   createMongooseOptions(): MongooseModuleOptions {
-    const uri: string = this.configService.get('messageRelayer.mongodb.uri');
+    const uri: string = this.configService.get('mongodb.uri');
     if (!uri) {
       throw new Error('MongoDB URI is not defined');
     }

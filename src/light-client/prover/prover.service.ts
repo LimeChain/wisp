@@ -18,7 +18,7 @@ export class ProverService {
   private isZKPInProgress: boolean = false;
 
   constructor(private beaconService: BeaconService, private config: ConfigService) {
-    this.baseUrl = this.config.get<string>("lightClient.prover.url");
+    this.baseUrl = this.config.get<string>("prover.url");
   }
 
   /**

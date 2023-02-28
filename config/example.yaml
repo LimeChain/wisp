@@ -1,15 +1,38 @@
 server:
-  port: 3000
-lightClient:
-  genesisTime: 1616508000
-  beaconNode:
-    url:
-  prover:
-    url:
-  networks:
-    - name: 'Goerli'
-      rpcUrl:
-      contractAddress: '0x78a8de9fef87777afabc4862c99f91a1d54d09f8'
-      privateKey:
+  port: 8080
+networks:
+  l1:
+    genesisTime: 1616508000
+    consensusNode:
+      url: ''
+    executionNode:
+      url: ''
+  rollups:
+    - name: 'Optimism'
+      rpcUrl: 'https://goerli.optimism.io'
+      chainId: 28528
+      privateKey: ''
+      incoming:
+        supported: true
+        inboxContract: '0x1b69456be66a674a312695db3a1ab7231ff15e4f'
+      outgoing:
+        supported: true
+        l1RollupContract: '0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0'
+        outboxContract: '0xD2d86E82e6087274225cb6240cBd09aeCa152e69'
+        lightClientContract: '0x829d3f79eb79d1412445a86a6f418071f393d117'
+    - name: 'Base'
+      chainId: 84531,
+      rpcUrl: 'https://goerli.base.org'
+      privateKey: ''
+      incoming:
+        supported: true
+        inboxContract: '0xac82b902c9ad12c116cc50c4d0a1331284b6967d'
+      outgoing:
+        supported: true
+        l1RollupContract: '0x2A35891ff30313CcFa6CE88dcf3858bb075A2298'
+        outboxContract: '0xa59c14c96668451130ce09b9e1d68e07f95b4e5d'
+        lightClientContract: '0x60ded9cd87bfbb6ed6780cb762e22d3d79e25527'
+prover:
+  url: ''
 mongodb:
-  uri: '<connection string>'
+  uri: ''

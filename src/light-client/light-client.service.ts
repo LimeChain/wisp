@@ -41,7 +41,7 @@ export class LightClientService {
     private readonly eventEmitter: EventEmitter2,
     @Inject("LightClients") private readonly lightClients: LightClientContract[]
   ) {
-    this.genesisTime = config.get<number>("lightClient.genesisTime");
+    this.genesisTime = config.get<number>("networks.l1.genesisTime");
     // Subscribe to events
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewHead.bind(this));
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_SYNC_COMMITTEE_PERIOD, this.onNewSyncPeriod.bind(this));
