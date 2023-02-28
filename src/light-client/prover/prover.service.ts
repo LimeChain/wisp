@@ -6,9 +6,8 @@ import { PointG1, PointG2 } from "@noble/bls12-381";
 import { Utils } from "../../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
-
-export const ROOT_BYTE_LENGTH = 32;
-export const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
+import { Groth16Proof } from "../../model";
+import { AGGREGATE_SIGNATURE_BYTE_LENGTH, ROOT_BYTE_LENGTH } from "../../constants/constants";
 
 @Injectable()
 export class ProverService {
@@ -195,10 +194,4 @@ export class ProverService {
     ]));
     return ethers.utils.sha256(Buffer.concat([ethers.utils.arrayify(left), ethers.utils.arrayify(right)]));
   }
-}
-
-export type Groth16Proof = {
-  a: string[],
-  b: string[][],
-  c: string[]
 }

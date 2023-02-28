@@ -9,3 +9,11 @@ export default () => {
     readFileSync(join(__dirname, YAML_CONFIG_FILENAME), 'utf8'),
   ) as Record<string, any>;
 };
+
+export type NetworkConfig = {
+  name: string,
+  rpcUrl: string,
+  chainId: number,
+  contractAddress: string,
+  privateKey: string
+}

@@ -1,71 +1,111 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { BeaconService } from "./beacon/beacon.service";
 import { altair } from "@lodestar/types";
 import { lodestar } from "../lodestar-types";
 import { createProof, ProofType, SingleProof } from "@chainsafe/persistent-merkle-tree";
 import { ethers } from "ethers";
 import { Utils } from "../utils";
-import { Groth16Proof, ProverService, ROOT_BYTE_LENGTH } from "./prover/prover.service";
-import { ContractsService } from "./contracts/contracts.service";
+import { ProverService } from "./prover/prover.service";
 import { ConfigService } from "@nestjs/config";
+import { Events } from "../events/events";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { LightClientContract } from "./contract/light-client-contract.service";
+import { Header, LightClientUpdate } from "../model";
+import {
+  MIN_SYNC_COMMITTEE_PARTICIPATION,
+  ROOT_BYTE_LENGTH,
+  SECONDS_PER_SLOT,
+  SLOTS_PER_SYNC_PERIOD
+} from "../constants/constants";
 
 const NODE_LENGTH = 32;
 
 @Injectable()
 export class LightClientService {
-
   private readonly logger = new Logger(LightClientService.name);
-  private head: number = 0;
+
+  // Constants
   private readonly genesisTime: number;
+
+  // State
+  private head: number = 0;
+  private nextPeriodUpdateAt: number = 0;
   private pendingHeadUpdate: number = 0;
-  private SECONDS_PER_SLOT: number = 12;
-  private SYNC_COMMITTEE_SIZE: number = 512;
-  private SLOTS_PER_SYNC_PERIOD: number = 8192;
-  private MIN_SYNC_COMMITTEE_PARTICIPATION = Math.ceil(this.SYNC_COMMITTEE_SIZE * 2 / 3);
-  private nextSyncCommitteeUpdateAtSlot: number = 0;
+  private readonly chain2Head = new Map<number, number>();
+  private readonly chain2Period = new Map<number, number>();
 
   constructor(
-    private beaconService: BeaconService,
-    private proverService: ProverService,
-    private contractsService: ContractsService,
-    private config: ConfigService
+    private readonly beaconService: BeaconService,
+    private readonly proverService: ProverService,
+    private readonly config: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
+    @Inject("LightClients") private readonly lightClients: LightClientContract[]
   ) {
     this.genesisTime = config.get<number>("lightClient.genesisTime");
+    // Subscribe to events
+    this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewHead.bind(this));
+    this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_SYNC_COMMITTEE_PERIOD, this.onNewSyncPeriod.bind(this));
   }
 
+  /**
+   * Loads the Light Client's state and schedules the next sync committee period update
+   */
   async onModuleInit() {
-    // Evaluate Sync Committee State
-    // FIXME This assumes that only one network is in the config!
+    await Promise.all(this.lightClients.map(lc => lc.initialiseState()));
+    this.lightClients.forEach(lc => {
+      this.chain2Head.set(lc.chainId, lc.head);
+      this.chain2Period.set(lc.chainId, lc.syncCommitteePeriod);
+    });
+
+    this._recalculateHead();
+    this._recalculatePeriodUpdate();
+  }
+
+  onNewSyncPeriod(payload: { chainId: number, period: number, root: string }) {
+    this.chain2Period.set(payload.chainId, payload.period);
+    this._recalculatePeriodUpdate();
+  }
+
+  _recalculatePeriodUpdate() {
     const currentSyncPeriod = this.getCurrentSyncPeriod();
-    const roots = await this.contractsService.getSyncCommitteeRootsByPeriods([currentSyncPeriod, currentSyncPeriod + 1]);
-    const currentPeriodRootInContract = roots[0];
-    if (currentPeriodRootInContract == ethers.constants.HashZero) {
-      this.logger.error(`LightClient contract has skipped update of Sync Committee Period. Syncing outdated Light Client contracts is not supported yet!`);
-      // TODO exit the application
-      return;
-    }
-    const nextPeriodRootInContract = roots[1];
-    if (nextPeriodRootInContract == ethers.constants.HashZero) {
-      // Triggers the update at next finality update
-      this.nextSyncCommitteeUpdateAtSlot = currentSyncPeriod * this.SLOTS_PER_SYNC_PERIOD;
-      this.logger.log(`Scheduled update of Sync Committee mapping on next finality update`);
+    const oldestSyncCommitteePeriod = [...this.chain2Period.values()].sort((p1, p2) => p1 - p2)[0];
+    if (oldestSyncCommitteePeriod < currentSyncPeriod) {
+      this.logger.warn(`There are outdated Light Client contracts and will not be updated!`);
+    } else if (oldestSyncCommitteePeriod == currentSyncPeriod) {
+      this.nextPeriodUpdateAt = currentSyncPeriod * SLOTS_PER_SYNC_PERIOD;
+      this.logger.log(`Scheduled Sync Committee Period update on next finality update`);
     } else {
-      this.scheduleNextSyncPeriodUpdate();
+      this.nextPeriodUpdateAt = (currentSyncPeriod + 1) * SLOTS_PER_SYNC_PERIOD;
+      this.logger.log(`Scheduled Sync Committee Period update at slot = ${this.nextPeriodUpdateAt}`);
+    }
+  }
+
+  onNewHead(payload: { chainId: number, slot: number, root: string }) {
+    this.chain2Head.set(payload.chainId, payload.slot);
+    this._recalculateHead();
+  }
+
+  _recalculateHead() {
+    const heads = [...this.chain2Head.values()];
+    const oldestHead = Math.min(...heads);
+    if (this.head < oldestHead) {
+      this.head = oldestHead;
+      this.logger.log(`Updated head. slot = ${this.head}`);
     }
   }
 
   async processFinalityUpdate(update: altair.LightClientUpdate) {
     const finalizedSlot = update.finalizedHeader.beacon.slot;
     if (this.head >= finalizedSlot) {
-      this.logger.log(`Skipping Light Client contract update for slot=${finalizedSlot}. Newer finality slot already processed`);
+      this.logger.debug(`Skipping contract update for slot=${finalizedSlot}. Newer finality slot already processed`);
       return;
     }
     if (this.pendingHeadUpdate >= finalizedSlot) {
-      this.logger.debug(`Light Client Finality update already in progress for slot = ${finalizedSlot}`);
+      this.logger.debug(`Finality update already in progress for slot = ${finalizedSlot}`);
       return;
     }
     if (!this.proverService.hasCapacity()) {
-      this.logger.log(`Prover does not have capacity. Skipping ZKP creation for slot=${finalizedSlot}`);
+      this.logger.debug(`Prover does not have capacity. Skipping processing of Finality Update for slot=${finalizedSlot}`);
       return;
     }
 
@@ -73,59 +113,56 @@ export class LightClientService {
       .reduce((res, bit) => {
         return res + bit;
       });
-    if (participation <= this.MIN_SYNC_COMMITTEE_PARTICIPATION) {
+    if (participation <= MIN_SYNC_COMMITTEE_PARTICIPATION) {
       this.logger.warn(`Skipping finality update due to low participation. Slot = ${finalizedSlot}, Participation = ${participation}`);
       return;
     }
+    this.pendingHeadUpdate = finalizedSlot;
 
+    const shouldUpdateSyncCommittee = finalizedSlot >= this.nextPeriodUpdateAt;
     // 1. If SyncCommittee must be updated, start Root and Proof generation processes
-    const syncCommitteeUpdatePromise = finalizedSlot >= this.nextSyncCommitteeUpdateAtSlot ?
-      this.prepareSyncCommitteeUpdate(finalizedSlot) : Promise.resolve({
-        nextSyncCommitteeRoot: undefined,
-        nextSyncCommitteeRootBranch: undefined,
-        proof: undefined,
-        syncCommitteePoseidon: undefined
-      });
+    const beaconStatePromise = shouldUpdateSyncCommittee ? this.getBeaconState(finalizedSlot) : Promise.resolve();
 
     // 2. Request BLS Header Verify ZKP
     const blsHeaderSignatureProofPromise = this.proverService.computeBlsHeaderSignatureProof(update);
-    this.logger.log(`Requested ZKP for Light Client finality update of slot=${finalizedSlot}`);
-    this.pendingHeadUpdate = finalizedSlot;
+    this.logger.log(`Requested ZKP for a signed Beacon Header of slot=${finalizedSlot}`);
 
     // 3. Prepare Header Update
     const lcUpdate = await this.buildLightClientUpdate(update);
 
     // 4. Wait for promises to resolve
-    const promiseResults = await Promise.all([blsHeaderSignatureProofPromise, syncCommitteeUpdatePromise]);
+    const promiseResults = await Promise.all([blsHeaderSignatureProofPromise, beaconStatePromise]);
     lcUpdate.signature.proof = promiseResults[0];
     lcUpdate.signature.participation = participation;
 
     // 5. Broadcast header updates to all on-chain Light Client contracts
-    if (this.contractsService.shouldUpdateSyncCommittee) {
-      lcUpdate.nextSyncCommitteeRoot = promiseResults[1].nextSyncCommitteeRoot;
-      lcUpdate.nextSyncCommitteeBranch = promiseResults[1].nextSyncCommitteeRootBranch;
-      const nextSyncCommitteePoseidon = promiseResults[1].syncCommitteePoseidon;
-      const ssz2PoseidonProof = promiseResults[1].proof;
+    if (shouldUpdateSyncCommittee) {
+      const syncCommitteeUpdate = await this.prepareSyncCommitteeUpdate(promiseResults[1]);
+      lcUpdate.nextSyncCommitteeRoot = syncCommitteeUpdate.nextSyncCommitteeRoot;
+      lcUpdate.nextSyncCommitteeBranch = syncCommitteeUpdate.nextSyncCommitteeRootBranch;
+      const nextSyncCommitteePoseidon = syncCommitteeUpdate.syncCommitteePoseidon;
+      const ssz2PoseidonProof = syncCommitteeUpdate.proof;
 
-      this.contractsService.broadcastWithSyncCommitteeUpdate(lcUpdate, nextSyncCommitteePoseidon, ssz2PoseidonProof);
-      // FIXME does not take into account that TX may revert
-      this.scheduleNextSyncPeriodUpdate();
-    } else {
-      this.contractsService.broadcast(lcUpdate);
+      this.eventEmitter.emit(Events.LIGHT_CLIENT_SYNC_COMMITTEE_UPDATE, {
+        update: lcUpdate,
+        nextSyncCommitteePoseidon,
+        proof: ssz2PoseidonProof
+      });
     }
-    // FIXME takes into account that all light client contracts are at the same height
-    this.head = finalizedSlot;
+    this.eventEmitter.emit(Events.LIGHT_CLIENT_HEAD_UPDATE, lcUpdate);
   }
 
-  private async prepareSyncCommitteeUpdate(slot: number) {
-    this.logger.log(`Sync Committee Update started`);
-    // 1. Get Beacon state
-    const beaconState = await this.beaconService.getBeaconState(slot);
-    // 2. Request SyncCommittee Commitment proof from Prover
-    const syncCommitteeZKP = this.proverService.computeSyncCommitteeCommitmentProof(beaconState.nextSyncCommittee);
-    this.logger.log(`Requested ZKP for Sync Committee update`);
+  private async getBeaconState(slot: number) {
+    this.logger.log(`Downloading Beacon State at slot = ${slot}`);
+    return await this.beaconService.getBeaconState(slot);
+  }
 
-    // 3. Compute the Root + MerkleInclusionProof branches while waiting for proof
+  private async prepareSyncCommitteeUpdate(beaconState) {
+    // 1. Request SyncCommittee Commitment proof from Prover
+    const syncCommitteeZKP = this.proverService.computeSyncCommitteeCommitmentProof(beaconState.nextSyncCommittee);
+    this.logger.log(`Requested ZKP for Sync Committee update of slot = ${beaconState.slot}`);
+
+    // 2. Compute the Root + MerkleInclusionProof branches while waiting for proof
     const nextSyncCommitteeRoot = ethers.utils.hexlify(lodestar.ssz.altair.SyncCommittee.hashTreeRoot(beaconState.nextSyncCommittee));
     const merkleInclusionProof = createProof(
       lodestar.ssz.bellatrix.BeaconState.toView(beaconState).node, {
@@ -186,40 +223,8 @@ export class LightClientService {
   }
 
   private getCurrentSyncPeriod(): number {
-    const currentSlot = Math.floor(((Date.now() / 1000) - this.genesisTime) / this.SECONDS_PER_SLOT);
-    return this.getSyncPeriodForSlot(currentSlot);
+    const currentSlot = Math.floor(((Date.now() / 1000) - this.genesisTime) / SECONDS_PER_SLOT);
+    return Utils.getSyncPeriodForSlot(currentSlot);
   }
 
-  private getSyncPeriodForSlot(slot: number): number {
-    return Math.floor(slot / this.SLOTS_PER_SYNC_PERIOD);
-  }
-
-  private scheduleNextSyncPeriodUpdate() {
-    this.nextSyncCommitteeUpdateAtSlot = (this.getCurrentSyncPeriod() + 1) * this.SLOTS_PER_SYNC_PERIOD;
-    this.logger.log(`Scheduled update of Sync Committee mapping at slot = ${this.nextSyncCommitteeUpdateAtSlot}`);
-  }
-}
-
-export type LightClientUpdate = {
-  attestedHeader: Header,
-  finalizedHeader: Header,
-  finalityBranch: string[],
-  nextSyncCommitteeRoot: string,
-  nextSyncCommitteeBranch: string[],
-  executionStateRoot: string,
-  executionStateRootBranch: string[],
-  signature: BlsAggregatedSignature
-}
-
-type Header = {
-  slot: number
-  proposerIndex: number
-  parentRoot: string
-  stateRoot: string
-  bodyRoot: string
-}
-
-type BlsAggregatedSignature = {
-  participation: number,
-  proof: Groth16Proof
 }

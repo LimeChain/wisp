@@ -18,9 +18,4 @@ export class ApiController {
     this.lightClientService.processFinalityUpdate(update);
   }
 
-  @Post("/optimistic_update")
-  optimisticUpdate(@Body() body: any) {
-    const update = body as altair.LightClientUpdate;
-    this.logger.debug(`Received optimistic update for slot = ${update.attestedHeader.beacon.slot} . No action will be taken`);
-  }
 }
