@@ -15,9 +15,6 @@ export class LightClientContract {
   private readonly logger: Logger;
   private readonly lightClient: Contract;
 
-  // head = 15000; period = 1; -> period=2
-  // math.floor(head/8192) + 1
-
   public head: number = 0;
   public syncCommitteePeriod: number = 0;
 
