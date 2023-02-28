@@ -64,31 +64,6 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "uint256",
-                "name": "slot",
-                "type": "uint256"
-            },
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "root",
-                "type": "bytes32"
-            },
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "participation",
-                "type": "uint256"
-            }
-        ],
-        "name": "OptimisticHeadUpdate",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
                 "internalType": "address",
                 "name": "previousOwner",
                 "type": "address"
@@ -227,13 +202,6 @@
     },
     {
         "inputs": [],
-        "name": "forceUpdate",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "head",
         "outputs": [
             {
@@ -246,137 +214,13 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint64",
-                "name": "",
-                "type": "uint64"
-            }
-        ],
-        "name": "headers",
-        "outputs": [
-            {
-                "internalType": "uint64",
-                "name": "slot",
-                "type": "uint64"
-            },
-            {
-                "internalType": "uint64",
-                "name": "proposerIndex",
-                "type": "uint64"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "parentRoot",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "stateRoot",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "bodyRoot",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [],
-        "name": "optimisticExecutionStateRoot",
+        "name": "latestSyncCommitteePeriod",
         "outputs": [
             {
-                "internalType": "bytes32",
+                "internalType": "uint256",
                 "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "optimisticHeader",
-        "outputs": [
-            {
-                "internalType": "uint64",
-                "name": "slot",
-                "type": "uint64"
-            },
-            {
-                "internalType": "uint64",
-                "name": "proposerIndex",
-                "type": "uint64"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "parentRoot",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "stateRoot",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "bodyRoot",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "optimisticNextSyncCommitteePoseidon",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "optimisticNextSyncCommitteeRoot",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "optimisticParticipation",
-        "outputs": [
-            {
-                "internalType": "uint64",
-                "name": "",
-                "type": "uint64"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "optimisticTimeout",
-        "outputs": [
-            {
-                "internalType": "uint64",
-                "name": "",
-                "type": "uint64"
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -445,163 +289,6 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint64",
-                "name": "slot",
-                "type": "uint64"
-            }
-        ],
-        "name": "stateRoot",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "components": [
-                            {
-                                "internalType": "uint64",
-                                "name": "slot",
-                                "type": "uint64"
-                            },
-                            {
-                                "internalType": "uint64",
-                                "name": "proposerIndex",
-                                "type": "uint64"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "parentRoot",
-                                "type": "bytes32"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "stateRoot",
-                                "type": "bytes32"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "bodyRoot",
-                                "type": "bytes32"
-                            }
-                        ],
-                        "internalType": "struct BeaconBlockHeader",
-                        "name": "attestedHeader",
-                        "type": "tuple"
-                    },
-                    {
-                        "components": [
-                            {
-                                "internalType": "uint64",
-                                "name": "slot",
-                                "type": "uint64"
-                            },
-                            {
-                                "internalType": "uint64",
-                                "name": "proposerIndex",
-                                "type": "uint64"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "parentRoot",
-                                "type": "bytes32"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "stateRoot",
-                                "type": "bytes32"
-                            },
-                            {
-                                "internalType": "bytes32",
-                                "name": "bodyRoot",
-                                "type": "bytes32"
-                            }
-                        ],
-                        "internalType": "struct BeaconBlockHeader",
-                        "name": "finalizedHeader",
-                        "type": "tuple"
-                    },
-                    {
-                        "internalType": "bytes32[]",
-                        "name": "finalityBranch",
-                        "type": "bytes32[]"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "nextSyncCommitteeRoot",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "bytes32[]",
-                        "name": "nextSyncCommitteeBranch",
-                        "type": "bytes32[]"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "executionStateRoot",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "bytes32[]",
-                        "name": "executionStateRootBranch",
-                        "type": "bytes32[]"
-                    },
-                    {
-                        "components": [
-                            {
-                                "internalType": "uint64",
-                                "name": "participation",
-                                "type": "uint64"
-                            },
-                            {
-                                "components": [
-                                    {
-                                        "internalType": "uint256[2]",
-                                        "name": "a",
-                                        "type": "uint256[2]"
-                                    },
-                                    {
-                                        "internalType": "uint256[2][2]",
-                                        "name": "b",
-                                        "type": "uint256[2][2]"
-                                    },
-                                    {
-                                        "internalType": "uint256[2]",
-                                        "name": "c",
-                                        "type": "uint256[2]"
-                                    }
-                                ],
-                                "internalType": "struct Groth16Proof",
-                                "name": "proof",
-                                "type": "tuple"
-                            }
-                        ],
-                        "internalType": "struct BLSAggregatedSignature",
-                        "name": "signature",
-                        "type": "tuple"
-                    }
-                ],
-                "internalType": "struct LightClientUpdate",
-                "name": "update",
-                "type": "tuple"
-            }
-        ],
-        "name": "step",
-        "outputs": [],
-        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -767,6 +454,144 @@
                 "internalType": "struct LightClientUpdate",
                 "name": "update",
                 "type": "tuple"
+            }
+        ],
+        "name": "update",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "attestedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "slot",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "uint64",
+                                "name": "proposerIndex",
+                                "type": "uint64"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "parentRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "stateRoot",
+                                "type": "bytes32"
+                            },
+                            {
+                                "internalType": "bytes32",
+                                "name": "bodyRoot",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "internalType": "struct BeaconBlockHeader",
+                        "name": "finalizedHeader",
+                        "type": "tuple"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "finalityBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "nextSyncCommitteeRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "nextSyncCommitteeBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "executionStateRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "executionStateRootBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint64",
+                                "name": "participation",
+                                "type": "uint64"
+                            },
+                            {
+                                "components": [
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "a",
+                                        "type": "uint256[2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2][2]",
+                                        "name": "b",
+                                        "type": "uint256[2][2]"
+                                    },
+                                    {
+                                        "internalType": "uint256[2]",
+                                        "name": "c",
+                                        "type": "uint256[2]"
+                                    }
+                                ],
+                                "internalType": "struct Groth16Proof",
+                                "name": "proof",
+                                "type": "tuple"
+                            }
+                        ],
+                        "internalType": "struct BLSAggregatedSignature",
+                        "name": "signature",
+                        "type": "tuple"
+                    }
+                ],
+                "internalType": "struct LightClientUpdate",
+                "name": "update",
+                "type": "tuple"
             },
             {
                 "internalType": "bytes32",
@@ -796,7 +621,7 @@
                 "type": "tuple"
             }
         ],
-        "name": "updateSyncCommittee",
+        "name": "updateWithSyncCommittee",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
