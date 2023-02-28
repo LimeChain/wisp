@@ -1,4 +1,4 @@
-import { MessageDTO } from 'src/message-relayer/dtos/message.dto';
+import { MessageDTO } from 'src/messages/dtos/message.dto';
 
 export interface IDataLayer {
   createMessage(message: MessageDTO);

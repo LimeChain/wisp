@@ -1,12 +1,12 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER_SERVICE } from "../../../constants";
+import { DATA_LAYER_SERVICE } from "../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
 import { Contract, ethers } from "ethers";
-import * as L1RollupStateContract from "../../../../abis/Optimism/OutputOracle.json";
-import { NetworkConfig } from "../../../configuration";
+import * as L1RollupStateContract from "../../abis/Optimism/OutputOracle.json";
+import { NetworkConfig } from "../configuration";
 
 @Injectable()
-export class RollupListener {
+export class RollupStateContract {
 
   private readonly logger: Logger;
   private readonly l1RollupState: Contract;
@@ -17,7 +17,7 @@ export class RollupListener {
     private readonly networkConfig: NetworkConfig,
     private readonly l1RpcUrl: string
   ) {
-    this.logger = new Logger(`${RollupListener.name}-${networkConfig.name}`);
+    this.logger = new Logger(`${RollupStateContract.name}-${networkConfig.name}`);
 
     // Initialise Rollup contract listener instance
     const provider = new ethers.providers.JsonRpcProvider(l1RpcUrl);

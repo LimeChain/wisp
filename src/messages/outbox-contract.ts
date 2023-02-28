@@ -1,13 +1,13 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER_SERVICE } from "../../../constants";
+import { DATA_LAYER_SERVICE } from "../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
-import { MessageDTO } from "../../dtos/message.dto";
-import * as Outbox from "../../../../abis/Outbox.json";
+import { MessageDTO } from "./dtos/message.dto";
+import * as Outbox from "../../abis/Outbox.json";
 import { Contract, ethers } from "ethers";
-import { NetworkConfig } from "../../../configuration";
+import { NetworkConfig } from "../configuration";
 
 @Injectable()
-export class MessageListener {
+export class OutboxContract {
 
   private readonly logger: Logger;
   private outbox: Contract;
@@ -17,7 +17,7 @@ export class MessageListener {
     private readonly dataLayerService: IDataLayer,
     private readonly networkConfig: NetworkConfig
   ) {
-    this.logger = new Logger(`${MessageListener.name}-${networkConfig.name}`);
+    this.logger = new Logger(`${OutboxContract.name}-${networkConfig.name}`);
 
     // Initialise outbox contract instance
     const provider = new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);

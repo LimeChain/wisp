@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Messages, MessagesSchema } from "src/database/schemas/message.schema";
 import { DataLayerService } from "src/data-layer/data-layer.service";
-import { MessageListener } from "./services/message-listener/message-listener.service";
-import { RollupListener } from "./services/rollup-listener/rollup-listener.service";
+import { OutboxContract } from "./outbox-contract";
+import { RollupStateContract } from "./rollup-state-contract";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { IDataLayer } from "../data-layer/IDataLayer";
 import configuration, { NetworkConfig } from "../configuration";
@@ -23,23 +23,23 @@ import configuration, { NetworkConfig } from "../configuration";
         // Instantiate Outbox contract listeners for rollups that support outgoing communication
         return config.get<NetworkConfig[]>("networks.rollups")
           .filter(config => config.outgoing.supported)
-          .map((config) => new MessageListener(dataLayer, config));
+          .map((config) => new OutboxContract(dataLayer, config));
       },
       inject: [ConfigService, DataLayerService]
     },
     {
-      provide: "RollupContracts",
+      provide: "RollupStateContracts",
       useFactory: (config: ConfigService, dataLayer: IDataLayer) => {
         const l1RpcUrl = config.get<string>("networks.l1.executionNode");
         // Instantiate Rollup contract listeners for rollups that support outgoing communication
         return config.get<NetworkConfig[]>("networks.rollups")
           .filter(config => config.outgoing.supported)
-          .map((rollup) => new RollupListener(dataLayer, rollup, l1RpcUrl));
+          .map((rollup) => new RollupStateContract(dataLayer, rollup, l1RpcUrl));
       },
       inject: [ConfigService, DataLayerService]
     }
     //LightClientListener,
   ]
 })
-export class MessageRelayerModule {
+export class MessagesModule {
 }

@@ -34,7 +34,7 @@ export class LightClientContract {
     this.lightClient.on("HeadUpdate", this.onNewHead.bind(this));
     this.lightClient.on("SyncCommitteeUpdate", this.onNewSyncPeriod.bind(this));
 
-    this.logger.log(`Instantiated contract at ${this.address}`);
+    this.logger.log(`Instantiated contract at ${this.lightClient.address}`);
   }
 
   /**
@@ -101,14 +101,6 @@ export class LightClientContract {
       period: period.toNumber(),
       root
     });
-  }
-
-  get address() {
-    return this.lightClient.address;
-  }
-
-  public toString(): string {
-    return `(${this.name} - ${this.address})`;
   }
 
   shouldUpdateWithSyncCommittee(slot:number): boolean {

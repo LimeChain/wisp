@@ -4,8 +4,6 @@ export const GOERLI_RPC_ENDPOINT =
   'https://goerli.infura.io/v3/7b3a0fd342104fc9a42e32019a6abd9a';
 
 // Contract events
-export const EVENT_MESSAGE_SENT = 'MessageSent';
-export const EVENT_OUTPUT_PROPOSED = 'OutputProposed';
 export const HEAD_UPDATE = 'HeadUpdate';
 
 export const DATA_LAYER_SERVICE = 'DATA LAYER SERVICE';

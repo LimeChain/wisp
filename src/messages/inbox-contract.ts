@@ -5,12 +5,12 @@ import { BN, bufferToHex, keccak, setLengthLeft, toBuffer, unpadBuffer } from "e
 import { IDataLayer } from "src/data-layer/IDataLayer";
 import { Contract, ethers } from "ethers";
 import { ConfigService } from "@nestjs/config";
-import * as LightClient from "../../../../abis/SimpleLightClient.json";
-import * as Inbox from "../../../../abis/Optimism/OptimismInbox.json";
+import * as LightClient from "../../abis/SimpleLightClient.json";
+import * as Inbox from "../../abis/Optimism/OptimismInbox.json";
 
 @Injectable()
-export class LightClientListener {
-  private readonly logger = new Logger(LightClientListener.name);
+export class InboxContract {
+  private readonly logger = new Logger(InboxContract.name);
 
   constructor(
     @Inject(DATA_LAYER_SERVICE)
@@ -77,7 +77,7 @@ export class LightClientListener {
           for (const message of messages) {
             if (newBlockHeaderNumber >= message.L1BlockNumber) {
               this.logger.log(
-                `${LightClientListener.name}: receiving flow triggered`
+                `${InboxContract.name}: receiving flow triggered`
               );
 
               // Step 2 - Get all the information needed for the Optimism Output Root inclusion inside L1 proof
