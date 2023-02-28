@@ -1,23 +1,19 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { AppService } from './app.service';
-import { LightClientModule } from './light-client/light-client.module';
-import { MessageRelayerModule } from './message-relayer/message-relayer.module';
-import configuration from './configuration';
-import { DataLayerModule } from './data-layer/data-layer.module';
-import { DatabaseModule } from './database/database.module';
+import { Module } from "@nestjs/common";
+import { AppService } from "./app.service";
+import { LightClientModule } from "./light-client/light-client.module";
+import { MessageRelayerModule } from "./message-relayer/message-relayer.module";
+import { DataLayerModule } from "./data-layer/data-layer.module";
+import { DatabaseModule } from "./database/database.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [configuration],
-    }),
     LightClientModule,
     MessageRelayerModule,
     DataLayerModule,
-    DatabaseModule,
+    DatabaseModule
   ],
   controllers: [],
-  providers: [AppService],
+  providers: [AppService]
 })
-export class AppModule {}
+export class AppModule {
+}

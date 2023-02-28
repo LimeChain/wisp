@@ -5,11 +5,16 @@ import { LightClientService } from "./light-client.service";
 import { ProverService } from "./prover/prover.service";
 import { ApiController } from "./api.controller";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
-import { NetworkConfig } from "../configuration";
+import configuration, { NetworkConfig } from "../configuration";
 import { LightClientContract } from "./light-client-contract";
 
 @Module({
-  imports: [ConfigModule, EventEmitterModule.forRoot()],
+  imports: [
+    ConfigModule.forRoot({
+      load: [configuration]
+    }),
+    EventEmitterModule.forRoot()
+  ],
   controllers: [ApiController],
   providers: [BeaconService, ProverService, LightClientService, {
     provide: "LightClients",
@@ -22,4 +27,5 @@ import { LightClientContract } from "./light-client-contract";
     inject: [ConfigService, EventEmitter2]
   }]
 })
-export class LightClientModule {}
+export class LightClientModule {
+}
