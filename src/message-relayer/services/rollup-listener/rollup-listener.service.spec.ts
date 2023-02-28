@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StateRelayerService } from './state-relayer.service';
+import { RollupListener } from './rollup-listener.service';
 
-describe('StateRelayerService', () => {
-  let service: StateRelayerService;
+describe('RollupListener', () => {
+  let service: RollupListener;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StateRelayerService],
+      providers: [RollupListener],
     }).compile();
 
-    service = module.get<StateRelayerService>(StateRelayerService);
+    service = module.get<RollupListener>(RollupListener);
   });
 
   it('should be defined', () => {

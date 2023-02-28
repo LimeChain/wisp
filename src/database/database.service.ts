@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class DatabaseService implements MongooseOptionsFactory {
   constructor(private configService: ConfigService) {}
+
   createMongooseOptions(): MongooseModuleOptions {
     const uri: string = this.configService.get('mongodb.uri');
     if (!uri) {

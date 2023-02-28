@@ -28,6 +28,7 @@
     "@nestjs/platform-express": "^9.0.0",
     "@noble/bls12-381": "^1.4.0",
     "class-validator": "^0.14.0",
+    "ethereumjs-util": "^7.1.5",
     "ethers": "^5.7.2",
     "extractoor": "^0.1.2",
     "js-yaml": "^4.1.0",

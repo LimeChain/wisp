@@ -11,7 +11,7 @@ export class Messages {
   public nonce: number;
 
   @Prop({ required: true })
-  public initialCaller: string;
+  public user: string;
 
   @Prop({ required: true })
   public payload: string;
@@ -19,13 +19,17 @@ export class Messages {
   @Prop({ required: true })
   public extra: string;
 
-  // stateRelayFee: number;
-  // deliveryFee: number;
   @Prop({ required: true })
-  public OptimismBlockNumber: number;
+  stateRelayFee: number;
 
   @Prop({ required: true })
-  public from: string;
+  deliveryFee: number;
+
+  @Prop({ required: true })
+  public L2BlockNumber: number;
+
+  @Prop({ required: true })
+  public target: string;
 
   @Prop({ required: true })
   public destinationChainId: number;
@@ -42,7 +46,7 @@ export class Messages {
 
   @Prop()
   @IsOptional()
-  public sent: boolean;
+  public sentHash: boolean;
 }
 
 export type MessagesDocument = Messages & Document;

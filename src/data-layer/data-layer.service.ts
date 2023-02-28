@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {
-  Messages,
-  MessagesDocument,
-} from 'src/database/schemas/message.schema';
+import { Messages, MessagesDocument } from '../database/schemas/message.schema';
 import { MessageDTO } from 'src/message-relayer/dtos/message.dto';
 import { IDataLayer } from './IDataLayer';
 
@@ -19,15 +16,15 @@ export class DataLayerService implements IDataLayer {
     return await this.messagesModel.create(message);
   }
 
-  async updateMessages(_L1BlockNumber: number) {
-    return await this.messagesModel.updateMany(
+  async updateMessages(L1BlockNumber: number) {
+    return this.messagesModel.updateMany(
       {
         L1BlockNumber: null,
-        OptimismBlockNumber: { $lte: _L1BlockNumber },
+        L2BlockNumber: { $lte: L1BlockNumber },
       },
       {
         $set: {
-          L1BlockNumber: _L1BlockNumber,
+          L1BlockNumber: L1BlockNumber,
         },
       },
     );

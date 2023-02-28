@@ -8,7 +8,7 @@ export class MessageDTO {
   nonce: number;
 
   @IsString()
-  initialCaller: string;
+  user: string;
 
   @IsString()
   payload: string;
@@ -16,14 +16,17 @@ export class MessageDTO {
   @IsString()
   extra: string;
 
-  // stateRelayFee: number;
-  // deliveryFee: number;
+  @IsNumber()
+  stateRelayFee: number;
 
   @IsNumber()
-  OptimismBlockNumber: number;
+  deliveryFee: number;
+
+  @IsNumber()
+  L2BlockNumber: number;
 
   @IsString()
-  from: string;
+  target: string;
 
   @IsNumber()
   destinationChainId: number;
@@ -40,5 +43,5 @@ export class MessageDTO {
 
   @IsBoolean()
   @IsOptional()
-  sent: boolean;
+  sentHash: boolean;
 }

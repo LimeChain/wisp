@@ -11,3 +11,5 @@ lightClient:
       rpcUrl:
       contractAddress: '0x78a8de9fef87777afabc4862c99f91a1d54d09f8'
       privateKey:
+mongodb:
+  uri: '<connection string>'
