@@ -1,11 +1,12 @@
-import { IsNumber, IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
+import { CRCMessage } from "../../models";
 
 export class MessageDTO {
   @IsNumber()
   version: number;
 
   @IsNumber()
-  nonce: number;
+  nonce: string;
 
   @IsString()
   user: string;
@@ -17,10 +18,10 @@ export class MessageDTO {
   extra: string;
 
   @IsNumber()
-  stateRelayFee: number;
+  stateRelayFee: string;
 
   @IsNumber()
-  deliveryFee: number;
+  deliveryFee: string;
 
   @IsNumber()
   L2BlockNumber: number;
@@ -29,13 +30,13 @@ export class MessageDTO {
   target: string;
 
   @IsNumber()
-  destinationChainId: number;
+  destinationChainId: string;
 
   @IsString()
-  messageHash: string;
+  hash: string;
 
   @IsNumber()
-  messageIndex: number;
+  index: number;
 
   @IsNumber()
   @IsOptional()
@@ -44,4 +45,15 @@ export class MessageDTO {
   @IsBoolean()
   @IsOptional()
   sentHash: boolean;
+
+  static fromCRCMessage(message: CRCMessage, L2BlockNumber: number, hash: string, index: number): MessageDTO {
+    return {
+      hash,
+      index,
+      L2BlockNumber,
+      L1BlockNumber: 0,
+      sentHash: null,
+      ...message
+    };
+  }
 }

@@ -8,7 +8,7 @@ export class Messages {
   public version: number;
 
   @Prop({ required: true })
-  public nonce: number;
+  public nonce: string;
 
   @Prop({ required: true })
   public user: string;
@@ -20,10 +20,10 @@ export class Messages {
   public extra: string;
 
   @Prop({ required: true })
-  stateRelayFee: number;
+  stateRelayFee: string;
 
   @Prop({ required: true })
-  deliveryFee: number;
+  deliveryFee: string;
 
   @Prop({ required: true })
   public L2BlockNumber: number;
@@ -32,13 +32,13 @@ export class Messages {
   public target: string;
 
   @Prop({ required: true })
-  public destinationChainId: number;
+  public destinationChainId: string;
 
   @Prop({ required: true, unique: true })
-  public messageHash: string;
+  public hash: string;
 
   @Prop({ required: true })
-  public messageIndex: number;
+  public index: number;
 
   @Prop()
   @IsOptional()

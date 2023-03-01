@@ -27,3 +27,15 @@ export type BlsAggregatedSignature = {
   participation: number,
   proof: Groth16Proof
 }
+
+export type CRCMessage = {
+  version: number
+  destinationChainId: string
+  nonce: string
+  user: string
+  target: string
+  payload: string
+  stateRelayFee: string
+  deliveryFee: string
+  extra: string
+}

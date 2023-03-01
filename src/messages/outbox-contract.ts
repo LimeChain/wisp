@@ -3,8 +3,9 @@ import { DATA_LAYER_SERVICE } from "../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
 import { MessageDTO } from "./dtos/message.dto";
 import * as Outbox from "../../abis/Outbox.json";
-import { Contract, ethers } from "ethers";
+import { BigNumber, Contract, ethers } from "ethers";
 import { NetworkConfig } from "../configuration";
+import { CRCMessage } from "../models";
 
 @Injectable()
 export class OutboxContract {
@@ -28,38 +29,18 @@ export class OutboxContract {
     this.logger.log(`Instantiated contract at ${this.outbox.address}`);
   }
 
-  async onNewMessage(...args) {
-    const tx = args[args.length - 1];
-    const {
-      version,
-      nonce,
-      user,
-      payload,
-      extra,
-      stateRelayFee,
-      deliveryFee,
-      target
-    } = await this.outbox.getMessageByIndex(tx.args.messageIndex);
-
-    const message: MessageDTO = {
-      version,
-      nonce,
-      user,
-      payload,
-      extra,
-      stateRelayFee,
-      deliveryFee,
-      L2BlockNumber: tx.blockNumber,
-      target,
-      destinationChainId: tx.args.destinationChainId,
-      messageHash: tx.args.hash,
-      messageIndex: tx.args.messageIndex,
-      L1BlockNumber: null,
-      sentHash: null
-    };
-
-    this.dataLayerService.createMessage(message);
-
-    this.logger.log(`Messages: ${JSON.stringify(message)}}`);
+  /**
+   * Called once `MessageSent` event is received from the corresponding Outbox contract
+   * @param sender
+   * @param destChainId
+   * @param messageHash
+   * @param messageIndex
+   * @param eventData
+   */
+  async onNewMessage(sender: string, destChainId: BigNumber, messageHash: string, messageIndex: number, eventData) {
+    this.logger.log(`New message found. hash = ${messageHash}, index ${messageIndex}`);
+    const message: CRCMessage = await this.outbox.getMessageByIndex(messageIndex);
+    const messageDTO = MessageDTO.fromCRCMessage(message, eventData.blockNumber, messageHash, messageIndex);
+    await this.dataLayerService.createMessage(messageDTO);
   }
 }
