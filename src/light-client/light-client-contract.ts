@@ -59,10 +59,10 @@ export class LightClientContract {
       const tx = await this.lightClient.update(update);
       this.logger.log(`Submitted header update transaction. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot}`);
       tx.wait().catch(e => {
-        this.logger.error(`Failed to update header. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot} } Error: ${e}`);
+        this.logger.error(`Failed to update header. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot} Error: ${e}`);
       });
     } catch (e) {
-      this.logger.error(`Transaction for header update will fail. Slot=${update.finalizedHeader.slot} }. Error: ${e.error.reason}`);
+      this.logger.error(`Transaction for header update will fail. slot=${update.finalizedHeader.slot} Error: ${e.error.reason}`);
     }
   }
 

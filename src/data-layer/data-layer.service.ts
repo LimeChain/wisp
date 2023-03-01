@@ -26,7 +26,7 @@ export class DataLayerService implements IDataLayer {
       { $set: { l1BlockNumber } }
     );
     if (result.modifiedCount > 0) {
-      this.logger.log(`Updated L1 Block number for ${result.modifiedCount} messages`);
+      this.logger.log(`Populated L1 block number for ${result.modifiedCount} messages`);
     }
   }
 
