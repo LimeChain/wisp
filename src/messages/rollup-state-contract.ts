@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { DATA_LAYER_SERVICE } from "../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
-import { Contract, ethers } from "ethers";
+import { BigNumber, Contract, ethers } from "ethers";
 import * as L1RollupStateContract from "../../abis/Optimism/OutputOracle.json";
 import { NetworkConfig } from "../configuration";
 
@@ -9,6 +9,7 @@ import { NetworkConfig } from "../configuration";
 export class RollupStateContract {
 
   private readonly logger: Logger;
+  private readonly chainId: number;
   private readonly l1RollupState: Contract;
 
   constructor(
@@ -18,6 +19,7 @@ export class RollupStateContract {
     private readonly l1RpcUrl: string
   ) {
     this.logger = new Logger(`${RollupStateContract.name}-${networkConfig.name}`);
+    this.chainId = networkConfig.chainId;
 
     // Initialise Rollup contract listener instance
     const provider = new ethers.providers.JsonRpcProvider(l1RpcUrl);
@@ -28,9 +30,17 @@ export class RollupStateContract {
     this.logger.log(`Instantiated contract at ${this.l1RollupState.address}`);
   }
 
-  async onNewBatchPosted(...args) {
-    const tx = args[args.length - 1];
-    const L1BlockNumber = tx.blockNumber;
-    await this.dataLayerService.updateMessages(L1BlockNumber);
+  /**
+   * Called once `OutputProposed` event is emitted from the corresponding Rollup State contract on L1
+   * Updates the l1 block numbers for all messages coming from that rollup that do not have it populated
+   * @param outputRoot
+   * @param l2OutputIndex
+   * @param l2BlockNumber
+   * @param l1Timestamp
+   * @param eventData
+   */
+  async onNewBatchPosted(outputRoot: string, l2OutputIndex: BigNumber, l2BlockNumber: BigNumber, l1Timestamp: BigNumber, eventData) {
+    this.logger.log(`New state posted on L1 up to L2 BlockNumber = ${l2BlockNumber.toNumber()}`);
+    this.dataLayerService.updateWithL1BlockNumber(this.chainId, eventData.blockNumber);
   }
 }

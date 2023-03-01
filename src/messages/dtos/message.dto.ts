@@ -8,8 +8,17 @@ export class MessageDTO {
   @IsNumber()
   nonce: string;
 
+  @IsNumber()
+  sourceChainId: number;
+
+  @IsNumber()
+  targetChainId: number;
+
   @IsString()
   user: string;
+
+  @IsString()
+  target: string;
 
   @IsString()
   payload: string;
@@ -18,40 +27,36 @@ export class MessageDTO {
   extra: string;
 
   @IsNumber()
+  index: number;
+
+  @IsString()
+  hash: string;
+
+  @IsNumber()
   stateRelayFee: string;
 
   @IsNumber()
   deliveryFee: string;
 
   @IsNumber()
-  L2BlockNumber: number;
-
-  @IsString()
-  target: string;
-
-  @IsNumber()
-  destinationChainId: string;
-
-  @IsString()
-  hash: string;
-
-  @IsNumber()
-  index: number;
+  l2BlockNumber: number;
 
   @IsNumber()
   @IsOptional()
-  L1BlockNumber: number;
+  l1BlockNumber: number;
 
   @IsBoolean()
   @IsOptional()
   sentHash: boolean;
 
-  static fromCRCMessage(message: CRCMessage, L2BlockNumber: number, hash: string, index: number): MessageDTO {
+  static fromCRCMessage({destinationChainId, ...message}: CRCMessage, l2BlockNumber: number, hash: string, index: number, chainId: number): MessageDTO {
     return {
       hash,
       index,
-      L2BlockNumber,
-      L1BlockNumber: 0,
+      sourceChainId: chainId,
+      targetChainId: Number(destinationChainId),
+      l2BlockNumber,
+      l1BlockNumber: 0,
       sentHash: null,
       ...message
     };

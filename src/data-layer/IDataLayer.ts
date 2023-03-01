@@ -2,6 +2,6 @@ import { MessageDTO } from 'src/messages/dtos/message.dto';
 
 export interface IDataLayer {
   createMessage(message: MessageDTO);
-  updateMessages(L1BlockNumber: number);
+  updateWithL1BlockNumber(sourceChainId: number, l1BlockNumber: number);
   getMessages();
 }
