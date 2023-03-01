@@ -45,9 +45,9 @@ export class MessageDTO {
   @IsOptional()
   l1BlockNumber: number;
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  sentHash: boolean;
+  deliveryTransactionHash: string;
 
   static fromCRCMessage({destinationChainId, ...message}: CRCMessage, l2BlockNumber: number, hash: string, index: number, chainId: number): MessageDTO {
     return {
@@ -57,7 +57,7 @@ export class MessageDTO {
       targetChainId: Number(destinationChainId),
       l2BlockNumber,
       l1BlockNumber: 0,
-      sentHash: null,
+      deliveryTransactionHash: null,
       ...message
     };
   }

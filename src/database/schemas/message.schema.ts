@@ -49,7 +49,7 @@ export class Messages {
 
   @Prop()
   @IsOptional()
-  public sentHash: boolean;
+  public deliveryTransactionHash: string;
 }
 
 export type MessagesDocument = Messages & Document;

@@ -30,7 +30,11 @@ export class DataLayerService implements IDataLayer {
     }
   }
 
-  async getMessages() {
-    return this.messagesModel.find();
+  getUndeliveredMessages(targetChainId: number, l1BlockNumber: number) {
+    return this.messagesModel.find({
+      deliveryTransactionHash: null,
+      targetChainId: targetChainId,
+      l1BlockNumber: { $lte: l1BlockNumber }
+    });
   }
 }
