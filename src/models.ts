@@ -8,6 +8,8 @@ export type LightClientUpdate = {
   attestedHeader: Header,
   finalizedHeader: Header,
   finalityBranch: string[],
+  blockNumber: number,
+  blockNumberBranch: string[],
   nextSyncCommitteeRoot: string,
   nextSyncCommitteeBranch: string[],
   executionStateRoot: string,
