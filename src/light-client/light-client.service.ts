@@ -16,7 +16,7 @@ import {
   ROOT_BYTE_LENGTH,
   SECONDS_PER_SLOT,
   SLOTS_PER_SYNC_PERIOD
-} from "../constants/constants";
+} from "../constants";
 
 const NODE_LENGTH = 32;
 

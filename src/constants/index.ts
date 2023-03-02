@@ -1,9 +1,7 @@
-// RPC endpoints
-export const GOERLI_OPTIMISM_RPC_ENDPOINT = 'https://goerli.optimism.io';
-export const GOERLI_RPC_ENDPOINT =
-  'https://goerli.infura.io/v3/7b3a0fd342104fc9a42e32019a6abd9a';
-
-// Contract events
-export const HEAD_UPDATE = 'HeadUpdate';
-
-export const DATA_LAYER_SERVICE = 'DATA LAYER SERVICE';
+export const ROOT_BYTE_LENGTH = 32;
+export const AGGREGATE_SIGNATURE_BYTE_LENGTH = 96;
+export const SECONDS_PER_SLOT: number = 12;
+export const SYNC_COMMITTEE_SIZE: number = 512;
+export const SLOTS_PER_SYNC_PERIOD: number = 8192;
+export const MIN_SYNC_COMMITTEE_PARTICIPATION = Math.ceil(SYNC_COMMITTEE_SIZE * 2 / 3);
+export const DATA_LAYER = 'DataLayer';

@@ -1,5 +1,5 @@
 import { PointG1 } from "@noble/bls12-381";
-import { SLOTS_PER_SYNC_PERIOD } from "./constants/constants";
+import { SLOTS_PER_SYNC_PERIOD } from "./constants";
 
 const N: number = 55; // The number of bits to use per register
 const K: number = 7; // The number of registers

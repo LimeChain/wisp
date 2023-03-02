@@ -1,9 +1,10 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsOptional } from 'class-validator';
-import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { IsOptional } from "class-validator";
+import { Document } from "mongoose";
 
-@Schema({ timestamps: true, collection: 'messages' })
-export class Messages {
+@Schema({ timestamps: true, collection: "messages" })
+export class Message {
+
   @Prop({ required: true })
   public version: number;
 
@@ -18,6 +19,9 @@ export class Messages {
 
   @Prop({ required: true })
   public user: string;
+
+  @Prop({ required: true })
+  public sender: string;
 
   @Prop({ required: true })
   public target: string;
@@ -52,7 +56,7 @@ export class Messages {
   public deliveryTransactionHash: string;
 }
 
-export type MessagesDocument = Messages & Document;
+export type MessagesDocument = Message & Document;
 
-export const MessagesSchema = SchemaFactory.createForClass(Messages);
+export const MessagesSchema = SchemaFactory.createForClass(Message);
 MessagesSchema.index({ blockNumber: 1, _id: 1 });

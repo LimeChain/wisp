@@ -31,7 +31,7 @@
     "class-validator": "^0.14.0",
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.7.2",
-    "extractoor": "^0.1.2",
+    "extractoor": "^0.1.4",
     "js-yaml": "^4.1.0",
     "mongoose": "^6.10.0",
     "reflect-metadata": "^0.1.13",

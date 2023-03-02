@@ -7,7 +7,7 @@ import { Utils } from "../../utils";
 import { ethers } from "ethers";
 import { LightClientFinalityUpdate } from "@lodestar/types/lib/altair";
 import { Groth16Proof } from "../../models";
-import { AGGREGATE_SIGNATURE_BYTE_LENGTH, ROOT_BYTE_LENGTH } from "../../constants/constants";
+import { AGGREGATE_SIGNATURE_BYTE_LENGTH, ROOT_BYTE_LENGTH } from "../../constants";
 
 @Injectable()
 export class ProverService {

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MessagesSchema, Messages } from 'src/database/schemas/message.schema';
+import { MessagesSchema, Message } from 'src/database/schemas/message.schema';
 import { DataLayerService } from './data-layer.service';
 import { DatabaseModule } from '../database/database.module';
 import { DatabaseService } from '../database/database.service';
@@ -15,7 +15,7 @@ import { DatabaseService } from '../database/database.service';
     }),
     MongooseModule.forFeature([
       {
-        name: Messages.name,
+        name: Message.name,
         schema: MessagesSchema,
       },
     ]),

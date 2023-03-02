@@ -1,3 +1,5 @@
+import { MessageDTO } from "./messages/dtos/message.dto";
+
 export type Groth16Proof = {
   a: string[],
   b: string[][],
@@ -30,14 +32,48 @@ export type BlsAggregatedSignature = {
   proof: Groth16Proof
 }
 
-export type CRCMessage = {
-  version: number
-  destinationChainId: string
-  nonce: string
-  user: string
-  target: string
-  payload: string
-  stateRelayFee: string
-  deliveryFee: string
-  extra: string
+export class CRCMessage {
+  version: number;
+  destinationChainId: string;
+  nonce: string;
+  user: string;
+  target: string;
+  payload: string;
+  stateRelayFee: string;
+  deliveryFee: string;
+  extra: string;
+
+  static fromDTO(message: MessageDTO): CRCMessage {
+    return {
+      version: message.version,
+      destinationChainId: message.targetChainId.toString(),
+      nonce: message.nonce,
+      user: message.user,
+      target: message.target,
+      payload: message.payload,
+      stateRelayFee: message.stateRelayFee,
+      deliveryFee: message.deliveryFee,
+      extra: message.extra
+    };
+  }
+}
+
+export type CRCMessageEnvelope = {
+  message: CRCMessage,
+  sender: string
+}
+
+export type OptimismOutputRootMIP = {
+  outputRootProof: {
+    stateRoot: string,
+    withdrawalStorageRoot: string,
+    latestBlockhash: string
+  }
+  optimismStateProofsBlob: string
+}
+
+export type OptimismMessageMIP = {
+  target: string,
+  slotPosition: string,
+  proofsBlob: string
 }

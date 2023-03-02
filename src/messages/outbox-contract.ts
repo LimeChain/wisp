@@ -1,12 +1,11 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER_SERVICE } from "../constants";
+import { DATA_LAYER } from "../constants";
 import { IDataLayer } from "src/data-layer/IDataLayer";
 import { MessageDTO } from "./dtos/message.dto";
 import * as Outbox from "../../abis/Outbox.json";
 import { BigNumber, Contract, ethers } from "ethers";
 import { NetworkConfig } from "../configuration";
 import { CRCMessage } from "../models";
-import * as net from "net";
 
 @Injectable()
 export class OutboxContract {
@@ -16,7 +15,7 @@ export class OutboxContract {
   private readonly outbox: Contract;
 
   constructor(
-    @Inject(DATA_LAYER_SERVICE)
+    @Inject(DATA_LAYER)
     private readonly dataLayerService: IDataLayer,
     private readonly networkConfig: NetworkConfig
   ) {
@@ -42,8 +41,9 @@ export class OutboxContract {
    */
   async onNewMessage(sender: string, destChainId: BigNumber, messageHash: string, messageIndex: number, eventData) {
     this.logger.log(`New message found. hash = ${messageHash}, index ${messageIndex}`);
+    const transaction = await eventData.getTransaction();
     const message: CRCMessage = await this.outbox.getMessageByIndex(messageIndex);
-    const messageDTO = MessageDTO.fromCRCMessage(message, eventData.blockNumber, messageHash, messageIndex, this.chainId);
+    const messageDTO = new MessageDTO(message, eventData.blockNumber, messageHash, messageIndex, this.chainId, transaction.from);
     await this.dataLayerService.createMessage(messageDTO);
   }
 }
