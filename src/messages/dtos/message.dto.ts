@@ -3,7 +3,7 @@ import { CRCMessage } from "../../models";
 
 export class MessageDTO {
 
-  constructor(message: CRCMessage, l2BlockNumber: number, hash: string, index: number, chainId: number, sender: string) {
+  constructor(message: CRCMessage, txHash: string, l2BlockNumber: number, hash: string, index: number, chainId: number, sender: string) {
     this.version = message.version;
     this.nonce = message.nonce;
     this.sourceChainId = chainId;
@@ -19,7 +19,8 @@ export class MessageDTO {
     this.deliveryFee = message.deliveryFee;
     this.l2BlockNumber = l2BlockNumber;
     this.l1BlockNumber = 0;
-    this.deliveryTransactionHash = null;
+    this.sourceChainTxHash = txHash;
+    this.targetChainTxHash = null;
   }
 
   @IsNumber()
@@ -64,11 +65,14 @@ export class MessageDTO {
   @IsNumber()
   l2BlockNumber: number;
 
-  @IsNumber()
-  @IsOptional()
-  l1BlockNumber: number;
+  @IsString()
+  sourceChainTxHash: string;
 
   @IsString()
   @IsOptional()
-  deliveryTransactionHash: string;
+  targetChainTxHash: string;
+
+  @IsNumber()
+  @IsOptional()
+  l1BlockNumber: number;
 }

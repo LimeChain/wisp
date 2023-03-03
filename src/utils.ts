@@ -1,5 +1,6 @@
 import { PointG1 } from "@noble/bls12-381";
 import { SLOTS_PER_SYNC_PERIOD } from "./constants";
+import { ethers } from "ethers";
 
 const N: number = 55; // The number of bits to use per register
 const K: number = 7; // The number of registers
@@ -93,5 +94,19 @@ export namespace Utils {
 
   export function getSyncPeriodForSlot(slot: number): number {
     return Math.floor(slot / SLOTS_PER_SYNC_PERIOD);
+  }
+
+  /**
+   * Storage key is derived from keccak256(padTo32(position)) converted to a uint256 number,
+   * where position is the number that represents the declaration order of the property
+   * @param positionOfProperty
+   */
+  export function computeStorageKey(positionOfProperty: number) {
+    return ethers.BigNumber.from(
+      ethers.utils.keccak256(
+        ethers.utils.zeroPad(
+          ethers.utils.arrayify(positionOfProperty), 32)
+      )
+    );
   }
 }

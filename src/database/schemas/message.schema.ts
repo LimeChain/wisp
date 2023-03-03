@@ -53,7 +53,11 @@ export class Message {
 
   @Prop()
   @IsOptional()
-  public deliveryTransactionHash: string;
+  public sourceChainTxHash: string;
+
+  @Prop()
+  @IsOptional()
+  public targetChainTxHash: string;
 }
 
 export type MessagesDocument = Message & Document;

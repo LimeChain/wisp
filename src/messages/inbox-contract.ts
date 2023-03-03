@@ -15,6 +15,7 @@ import {
 } from "extractoor";
 import { MessageDTO } from "./dtos/message.dto";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
+import { Utils } from "../utils";
 
 // Important! `networks.rollups[].name` must match the ones here
 const EXTRACTOOR_CONFIG = {
@@ -33,9 +34,9 @@ export class InboxContract {
   private readonly chain2Name = new Map<number, string>();
 
   // The position of the variable for the `outbox` array inside the `Outbox` contract
-  private readonly OUTBOX_ARRAY_POSITION = 0;
-  // Storage key is derived from keccak256(0x...{position}) converted to a uint256 number
-  private readonly OUTBOX_ARRAY_STORAGE_KEY: BigNumber = ethers.BigNumber.from(ethers.utils.keccak256(ethers.utils.hexlify(this.OUTBOX_ARRAY_POSITION)));
+  private readonly MESSAGES_ARRAY_POSITION = 0;
+  // The storage key at which messages are stored inside the `outbox` contract
+  private readonly MESSAGES_ARRAY_STORAGE_KEY: BigNumber;
 
   constructor(
     @Inject(DATA_LAYER)
@@ -55,6 +56,7 @@ export class InboxContract {
       this.chain2Outbox.set(n.chainId, n.outgoing.outboxContract);
       this.chain2Name.set(n.chainId, n.name);
     });
+    this.MESSAGES_ARRAY_STORAGE_KEY = Utils.computeStorageKey(this.MESSAGES_ARRAY_POSITION);
 
     // Initialise inbox contract instance
     const provider = new ethers.providers.JsonRpcProvider(inboxChainConfig.rpcUrl);
@@ -63,6 +65,7 @@ export class InboxContract {
 
     // Subscribe to new Light Client head updates
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewLightClientUpdate.bind(this));
+    this.inbox.on('MessageReceived', this.onMessageReceived.bind(this));
     this.logger.log(`Instantiated contract at ${this.inbox.address}`);
   }
 
@@ -91,7 +94,7 @@ export class InboxContract {
       // Process messages per chain in parallel
       await Promise.all(messageGroupsPerChain.map(async ([chain, messages]) => {
         const extractoor = this.chain2Extractoor.get(chain);
-        const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
+        const rollupStateProofData = await extractoor.generateLatestOutputData(`0x${payload.blockNumber.toString(16)}`);
         // Processing of messages for a given chain in parallel
         await Promise.all(messages.map(msg => this.process(extractoor, rollupStateProofData, msg)));
       }));
@@ -108,9 +111,9 @@ export class InboxContract {
    */
   async process(extractoor: OptimismExtractoorClient, rollupStateProofData: OutputData, message: MessageDTO) {
     // Compute storage slot of the message inside the outbox contract in `source` rollup
-    const messageStorageSlot = ethers.utils.hexlify(this.OUTBOX_ARRAY_STORAGE_KEY.add(0));
-    const outboxAddress = this.chain2Outbox.get(message.sourceChainId);
+    const messageStorageSlot = ethers.utils.hexlify(this.MESSAGES_ARRAY_STORAGE_KEY.add(message.index));
 
+    const outboxAddress = this.chain2Outbox.get(message.sourceChainId);
     // Get state proof for the message within the outbox contract inside the source rollup
     const outboxProofData = await extractoor.optimism.getProof(
       outboxAddress,
@@ -119,11 +122,11 @@ export class InboxContract {
     );
 
     // Prepare the calldata
-    const inclusionProof = (MPTProofsEncoder.rlpEncodeProofs(
+    const inclusionProof = MPTProofsEncoder.rlpEncodeProofs(
       [
         outboxProofData.accountProof,
         outboxProofData.storageProof[0].proof
-      ]));
+      ]);
 
     const envelope = {
       message: CRCMessage.fromDTO(message),
@@ -151,12 +154,14 @@ export class InboxContract {
         outputProof,
         MPTInclusionProof
       );
-      this.logger.log(`Submitted delivery of message. { from = ${this.chain2Name.get(message.sourceChainId)} messageHash = ${message.hash} txHash = ${transaction.hash} }`);
-      // TODO update message delivery transaction hash
+      this.logger.log(`Submitted delivery of message. {from =[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}] txHash=[${transaction.hash}] }`);
     } catch (e) {
-      this.logger.log(`Transaction for delivery of message will fail. { from = ${this.chain2Name.get(message.sourceChainId)} messageHash = ${message.hash} } . Error: ${e.error.reason}`);
+      this.logger.log(`Transaction for delivery of message will fail. {from=[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}]}. Error: ${e.error.reason}`);
     }
   }
 
-
+  async onMessageReceived(user: string, target: string, hash: string, eventData) {
+    this.logger.log(`Message with hash [${hash}] has been processed`);
+    await this.dataLayerService.setDeliveryTXHash(hash, eventData.transactionHash);
+  }
 }

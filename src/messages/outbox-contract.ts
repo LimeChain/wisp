@@ -40,10 +40,17 @@ export class OutboxContract {
    * @param eventData
    */
   async onNewMessage(sender: string, destChainId: BigNumber, messageHash: string, messageIndex: number, eventData) {
-    this.logger.log(`New message found. hash = ${messageHash}, index ${messageIndex}`);
-    const transaction = await eventData.getTransaction();
+    this.logger.log(`New message found. msgHash=[${messageHash}], index=[${messageIndex}]`);
     const message: CRCMessage = await this.outbox.getMessageByIndex(messageIndex);
-    const messageDTO = new MessageDTO(message, eventData.blockNumber, messageHash, messageIndex, this.chainId, transaction.from);
+    const messageDTO = new MessageDTO(
+      message,
+      eventData.transactionHash,
+      eventData.blockNumber,
+      messageHash,
+      messageIndex,
+      this.chainId,
+      sender
+    );
     await this.dataLayerService.createMessage(messageDTO);
   }
 }
