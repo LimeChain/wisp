@@ -82,7 +82,7 @@ export class InboxContract {
     const messages: MessageDTO[] = await this.dataLayerService.getUndeliveredMessages(this.chainId, payload.blockNumber);
 
     if (messages.length > 0) {
-      this.logger.log(`Light Client updated until blockNumber=[${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);
+      this.logger.log(`Light Client head updated to L1 Block [${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);
       const messagesMap = messages.reduce((acc, msg) => {
         const messagesForChain = acc.get(msg.sourceChainId) || [];
         messagesForChain.push(msg);
@@ -98,7 +98,7 @@ export class InboxContract {
         await Promise.all(messages.map(msg => this.process(extractoor, rollupStateProofData, msg)));
       }));
     } else {
-      this.logger.log(`Light Client updated until blockNumber=[${payload.blockNumber}]. No messages found for processing`);
+      this.logger.log(`Light Client updated to L1 Block [${payload.blockNumber}]. No messages found for processing`);
     }
   }
 

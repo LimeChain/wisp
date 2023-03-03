@@ -90,7 +90,7 @@ export class LightClientService {
     const oldestHead = Math.min(...heads);
     if (this.head < oldestHead) {
       this.head = oldestHead;
-      this.logger.log(`Updated head. slot = ${this.head}`);
+      this.logger.log(`Updated head to slot = ${this.head}`);
     }
   }
 
