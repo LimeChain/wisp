@@ -48,7 +48,7 @@ export class DataLayerService implements IDataLayer {
     return this.messagesModel.find({
       targetChainTxHash: null,
       targetChainId: targetChainId,
-      l1BlockNumber: { $lte: l1BlockNumber }
+      l1BlockNumber: { $lte: l1BlockNumber, $ne: 0 }
     });
   }
 }
