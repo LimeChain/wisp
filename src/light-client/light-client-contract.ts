@@ -4,7 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { NetworkConfig } from "../configuration";
 import { Events } from "../events/events";
-import { Groth16Proof, LightClientUpdate } from "../model";
+import { Groth16Proof, LightClientUpdate } from "../models";
 import { Utils } from "../utils";
 
 @Injectable()
@@ -26,7 +26,7 @@ export class LightClientContract {
     // Initialise Light Client instance
     const provider = new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
     const signer = new ethers.Wallet(networkConfig.privateKey, provider);
-    this.lightClient = new ethers.Contract(networkConfig.contractAddress, BeaconLightClientABI, signer);
+    this.lightClient = new ethers.Contract(networkConfig.outgoing.lightClientContract, BeaconLightClientABI, signer);
 
     // Subscribe to events
     this.eventEmitter.on(Events.LIGHT_CLIENT_HEAD_UPDATE, this.onUpdate.bind(this));
@@ -34,7 +34,7 @@ export class LightClientContract {
     this.lightClient.on("HeadUpdate", this.onNewHead.bind(this));
     this.lightClient.on("SyncCommitteeUpdate", this.onNewSyncPeriod.bind(this));
 
-    this.logger.log(`Instantiated contract at ${this.address}`);
+    this.logger.log(`Instantiated contract at ${this.lightClient.address}`);
   }
 
   /**
@@ -42,7 +42,7 @@ export class LightClientContract {
    */
   async initialiseState() {
     this.syncCommitteePeriod = (await this.lightClient.latestSyncCommitteePeriod() as ethers.BigNumber).toNumber();
-    this.head = (await this.lightClient.head() as ethers.BigNumber).toNumber();
+    this.head = (await this.lightClient.headSlot() as ethers.BigNumber).toNumber();
     this.logger.log(`Initialised contract state. slot = ${this.head}, period = ${this.syncCommitteePeriod}`);
   }
 
@@ -52,17 +52,17 @@ export class LightClientContract {
       return;
     }
     if (this.shouldUpdateWithSyncCommittee(update.finalizedHeader.slot)) {
-      this.logger.debug(`Head update published, but waiting for Update with Sync Committee. slot = ${update.finalizedHeader.slot}, period on-chain = ${this.syncCommitteePeriod}`);
+      this.logger.debug(`Head update published, but waiting for Update with Sync Committee. slot = ${update.finalizedHeader.slot} period on-chain = ${this.syncCommitteePeriod}`);
       return;
     }
     try {
       const tx = await this.lightClient.update(update);
-      this.logger.log(`Submitted header update transaction. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot}`);
+      this.logger.log(`Submitted header update transaction. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot}`);
       tx.wait().catch(e => {
-        this.logger.error(`Failed to update header. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot} } Error: ${e}`);
+        this.logger.error(`Failed to update header. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot} Error: ${e}`);
       });
     } catch (e) {
-      this.logger.error(`Transaction for header update will fail. Slot=${update.finalizedHeader.slot} }. Error: ${e.error.reason}`);
+      this.logger.error(`Transaction for header update will fail. slot=${update.finalizedHeader.slot} Error: ${e.error.reason}`);
     }
   }
 
@@ -78,19 +78,24 @@ export class LightClientContract {
     const { update, nextSyncCommitteePoseidon, proof } = payload;
     try {
       const tx = await this.lightClient.updateWithSyncCommittee(update, nextSyncCommitteePoseidon, proof);
-      this.logger.log(`Submitted Header + Sync Committee update transaction. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot}`);
+      this.logger.log(`Submitted Header + Sync Committee update transaction. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot}`);
       tx.wait().catch(e => {
-        this.logger.error(`Failed to update Header + Sync Committee period. Hash = ${tx.hash}, slot = ${update.finalizedHeader.slot} } Error: ${e}`);
+        this.logger.error(`Failed to update Header + Sync Committee period. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot} } Error: ${e}`);
       });
     } catch (e) {
       this.logger.error(`Transaction for Header + Sync Committee update will fail. Slot=${update.finalizedHeader.slot} }. Error: ${e.error.reason}`);
     }
   }
 
-  onNewHead(slot: ethers.BigNumber, root: string) {
-    this.logger.log(`New Head update received. slot = ${slot}`);
+  onNewHead(slot: ethers.BigNumber, blockNumber: ethers.BigNumber, executionRoot: string) {
+    this.logger.debug(`New head update received. slot = ${slot}, blockNumber = ${blockNumber}`);
     this.head = slot.toNumber();
-    this.eventEmitter.emit(Events.LIGHT_CLIENT_NEW_HEAD, { chainId: this.chainId, slot: slot.toNumber(), root });
+    this.eventEmitter.emit(Events.LIGHT_CLIENT_NEW_HEAD, {
+      chainId: this.chainId,
+      slot: slot.toNumber(),
+      blockNumber: blockNumber.toNumber(),
+      executionRoot: executionRoot
+    } as Events.HeadUpdate);
   }
 
   onNewSyncPeriod(period: ethers.BigNumber, root: string) {
@@ -99,19 +104,11 @@ export class LightClientContract {
     this.eventEmitter.emit(Events.LIGHT_CLIENT_NEW_SYNC_COMMITTEE_PERIOD, {
       chainId: this.chainId,
       period: period.toNumber(),
-      root
-    });
+      syncCommitteeRoot: root
+    } as Events.SyncCommitteeUpdate);
   }
 
-  get address() {
-    return this.lightClient.address;
-  }
-
-  public toString(): string {
-    return `(${this.name} - ${this.address})`;
-  }
-
-  shouldUpdateWithSyncCommittee(slot:number): boolean {
+  shouldUpdateWithSyncCommittee(slot: number): boolean {
     return this.syncCommitteePeriod < Utils.getSyncPeriodForSlot(slot) + 1;
   }
 

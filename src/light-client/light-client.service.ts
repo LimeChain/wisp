@@ -10,13 +10,13 @@ import { ConfigService } from "@nestjs/config";
 import { Events } from "../events/events";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { LightClientContract } from "./light-client-contract";
-import { Header, LightClientUpdate } from "../model";
+import { Header, LightClientUpdate } from "../models";
 import {
   MIN_SYNC_COMMITTEE_PARTICIPATION,
   ROOT_BYTE_LENGTH,
   SECONDS_PER_SLOT,
   SLOTS_PER_SYNC_PERIOD
-} from "../constants/constants";
+} from "../constants";
 
 const NODE_LENGTH = 32;
 
@@ -41,7 +41,7 @@ export class LightClientService {
     private readonly eventEmitter: EventEmitter2,
     @Inject("LightClients") private readonly lightClients: LightClientContract[]
   ) {
-    this.genesisTime = config.get<number>("lightClient.genesisTime");
+    this.genesisTime = config.get<number>("networks.l1.genesisTime");
     // Subscribe to events
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewHead.bind(this));
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_SYNC_COMMITTEE_PERIOD, this.onNewSyncPeriod.bind(this));
@@ -61,7 +61,7 @@ export class LightClientService {
     this._recalculatePeriodUpdate();
   }
 
-  onNewSyncPeriod(payload: { chainId: number, period: number, root: string }) {
+  onNewSyncPeriod(payload: Events.SyncCommitteeUpdate) {
     this.chain2Period.set(payload.chainId, payload.period);
     this._recalculatePeriodUpdate();
   }
@@ -80,7 +80,7 @@ export class LightClientService {
     }
   }
 
-  onNewHead(payload: { chainId: number, slot: number, root: string }) {
+  onNewHead(payload: Events.HeadUpdate) {
     this.chain2Head.set(payload.chainId, payload.slot);
     this._recalculateHead();
   }
@@ -90,7 +90,7 @@ export class LightClientService {
     const oldestHead = Math.min(...heads);
     if (this.head < oldestHead) {
       this.head = oldestHead;
-      this.logger.log(`Updated head. slot = ${this.head}`);
+      this.logger.log(`Updated head to slot = ${this.head}`);
     }
   }
 
@@ -185,13 +185,22 @@ export class LightClientService {
 
   private async buildLightClientUpdate(update: altair.LightClientUpdate): Promise<LightClientUpdate> {
     const finalizedBeaconBody = await this.beaconService.getBeaconBlockBody(update.finalizedHeader.beacon.slot);
-    const merkleInclusionProof = createProof(
+    const executionStateRootMIP = createProof(
       lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody).node, {
         type: ProofType.single,
         gindex: lodestar.ssz.bellatrix.BeaconBlockBody.getPathInfo(["executionPayload", "stateRoot"]).gindex
       }
     ) as SingleProof;
-    const executionStateRootBranch = merkleInclusionProof.witnesses.map(witnessNode => {
+    const executionStateRootBranch = executionStateRootMIP.witnesses.map(witnessNode => {
+      return ethers.utils.hexlify(witnessNode);
+    });
+    const blockNumberMIP = createProof(
+      lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody).node, {
+        type: ProofType.single,
+        gindex: lodestar.ssz.bellatrix.BeaconBlockBody.getPathInfo(["executionPayload", "blockNumber"]).gindex
+      }
+    ) as SingleProof;
+    const blockNumberBranch = blockNumberMIP.witnesses.map(witnessNode => {
       return ethers.utils.hexlify(witnessNode);
     });
 
@@ -200,6 +209,8 @@ export class LightClientService {
       finalizedHeader: LightClientService.asHeaderObject(update.finalizedHeader.beacon),
       executionStateRoot: ethers.utils.hexlify(finalizedBeaconBody.executionPayload.stateRoot),
       executionStateRootBranch,
+      blockNumber: finalizedBeaconBody.executionPayload.blockNumber,
+      blockNumberBranch,
       nextSyncCommitteeRoot: ethers.constants.HashZero,
       nextSyncCommitteeBranch: [],
       finalityBranch: update.finalityBranch.map(node => {

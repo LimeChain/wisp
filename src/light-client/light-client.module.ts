@@ -5,19 +5,27 @@ import { LightClientService } from "./light-client.service";
 import { ProverService } from "./prover/prover.service";
 import { ApiController } from "./api.controller";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
-import { NetworkConfig } from "../configuration";
+import configuration, { NetworkConfig } from "../configuration";
 import { LightClientContract } from "./light-client-contract";
 
 @Module({
-  imports: [ConfigModule, EventEmitterModule.forRoot()],
+  imports: [
+    ConfigModule.forRoot({
+      load: [configuration]
+    }),
+    EventEmitterModule.forRoot()
+  ],
   controllers: [ApiController],
   providers: [BeaconService, ProverService, LightClientService, {
     provide: "LightClients",
     useFactory: (config: ConfigService, eventEmitter: EventEmitter2) => {
-      return config.get<NetworkConfig[]>("lightClient.networks")
-        .map((networkConfig: NetworkConfig) => new LightClientContract(networkConfig, eventEmitter));
+      // Instantiate LightClient contracts for rollups that support outgoing communication
+      return config.get<NetworkConfig[]>("networks.rollups")
+        .filter(config => config.outgoing.supported)
+        .map(config => new LightClientContract(config, eventEmitter));
     },
     inject: [ConfigService, EventEmitter2]
   }]
 })
-export class LightClientModule {}
+export class LightClientModule {
+}

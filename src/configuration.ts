@@ -14,6 +14,15 @@ export type NetworkConfig = {
   name: string,
   rpcUrl: string,
   chainId: number,
-  contractAddress: string,
   privateKey: string
+  incoming: {
+    supported: boolean
+    inboxContract: string
+  },
+  outgoing: {
+    supported: boolean
+    l1RollupContract: string
+    outboxContract: string
+    lightClientContract: string
+  }
 }

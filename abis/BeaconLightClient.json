@@ -45,14 +45,20 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "uint256",
+                "internalType": "uint64",
                 "name": "slot",
-                "type": "uint256"
+                "type": "uint64"
+            },
+            {
+                "indexed": true,
+                "internalType": "uint64",
+                "name": "blockNumber",
+                "type": "uint64"
             },
             {
                 "indexed": true,
                 "internalType": "bytes32",
-                "name": "root",
+                "name": "executionRoot",
                 "type": "bytes32"
             }
         ],
@@ -83,9 +89,9 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "uint256",
+                "internalType": "uint64",
                 "name": "period",
-                "type": "uint256"
+                "type": "uint64"
             },
             {
                 "indexed": true,
@@ -202,7 +208,20 @@
     },
     {
         "inputs": [],
-        "name": "head",
+        "name": "headBlockNumber",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "headSlot",
         "outputs": [
             {
                 "internalType": "uint64",
@@ -270,6 +289,25 @@
         "name": "setDefaultForkVersion",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "name": "slot2block",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -417,6 +455,16 @@
                         "type": "bytes32[]"
                     },
                     {
+                        "internalType": "uint64",
+                        "name": "blockNumber",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "blockNumberBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
                         "components": [
                             {
                                 "internalType": "uint64",
@@ -552,6 +600,16 @@
                     {
                         "internalType": "bytes32[]",
                         "name": "executionStateRootBranch",
+                        "type": "bytes32[]"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "blockNumber",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "blockNumberBranch",
                         "type": "bytes32[]"
                     },
                     {
