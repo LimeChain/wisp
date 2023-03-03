@@ -9,29 +9,29 @@ networks:
       url: ''
   rollups:
     - name: 'Optimism'
-      rpcUrl: 'https://goerli.optimism.io'
-      chainId: 28528
+      rpcUrl: ''
+      chainId: 420
       privateKey: ''
       incoming:
         supported: true
-        inboxContract: '0x1b69456be66a674a312695db3a1ab7231ff15e4f'
+        inboxContract: '0x25ec3396b6d709d122999bc1de1327d0598a0fd1'
       outgoing:
         supported: true
         l1RollupContract: '0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0'
-        outboxContract: '0xD2d86E82e6087274225cb6240cBd09aeCa152e69'
-        lightClientContract: '0x829d3f79eb79d1412445a86a6f418071f393d117'
+        outboxContract: '0xb6f147a87ce210648e341569b61a132e02990653'
+        lightClientContract: '0x0399d42ba805465a5118b1d8037c9a3db1b0df83'
     - name: 'Base'
-      chainId: 84531,
+      chainId: 84531
       rpcUrl: 'https://goerli.base.org'
       privateKey: ''
       incoming:
         supported: true
-        inboxContract: '0xac82b902c9ad12c116cc50c4d0a1331284b6967d'
+        inboxContract: '0x13a2764480db29103cb804476ffa1ed68d604805'
       outgoing:
         supported: true
         l1RollupContract: '0x2A35891ff30313CcFa6CE88dcf3858bb075A2298'
-        outboxContract: '0xa59c14c96668451130ce09b9e1d68e07f95b4e5d'
-        lightClientContract: '0x60ded9cd87bfbb6ed6780cb762e22d3d79e25527'
+        outboxContract: '0xf904d6c85bacd4d0f4c3c60f170d5052111d5c54'
+        lightClientContract: '0x7106281bea5124b3dab4181d029eb982b3c43cfa'
 prover:
   url: ''
 mongodb:
