@@ -16,6 +16,7 @@ import {
 import { MessageDTO } from "./dtos/message.dto";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
 import { Utils } from "../utils";
+import { SignerService } from "../shared/signer.service";
 
 // Important! `networks.rollups[].name` must match the ones here
 const EXTRACTOOR_CONFIG = {
@@ -41,6 +42,7 @@ export class InboxContract {
   constructor(
     @Inject(DATA_LAYER)
     private readonly dataLayerService: IDataLayer,
+    private readonly signerService: SignerService,
     private readonly inboxChainConfig: NetworkConfig,
     private readonly l1RpcUrl: string,
     private readonly networks: NetworkConfig[],
@@ -59,13 +61,12 @@ export class InboxContract {
     this.MESSAGES_ARRAY_STORAGE_KEY = Utils.computeStorageKey(this.MESSAGES_ARRAY_POSITION);
 
     // Initialise inbox contract instance
-    const provider = new ethers.providers.JsonRpcProvider(inboxChainConfig.rpcUrl);
-    const signer = new ethers.Wallet(inboxChainConfig.privateKey, provider);
+    const signer = signerService.getManagedSignerFor(inboxChainConfig.privateKey, inboxChainConfig.rpcUrl);
     this.inbox = new ethers.Contract(inboxChainConfig.incoming.inboxContract, Inbox, signer);
 
     // Subscribe to new Light Client head updates
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewLightClientUpdate.bind(this));
-    this.inbox.on('MessageReceived', this.onMessageReceived.bind(this));
+    this.inbox.on("MessageReceived", this.onMessageReceived.bind(this));
     this.logger.log(`Instantiated contract at ${this.inbox.address}`);
   }
 
@@ -93,7 +94,7 @@ export class InboxContract {
       // Process messages per chain in parallel
       await Promise.all(messageGroupsPerChain.map(async ([chain, messages]) => {
         const extractoor = this.chain2Extractoor.get(chain);
-        const rollupStateProofData = await extractoor.generateLatestOutputData(`0x${payload.blockNumber.toString(16)}`);
+        const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
         // Processing of messages for a given chain in parallel
         await Promise.all(messages.map(msg => this.process(extractoor, rollupStateProofData, msg)));
       }));

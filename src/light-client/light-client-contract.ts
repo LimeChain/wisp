@@ -6,6 +6,7 @@ import { NetworkConfig } from "../configuration";
 import { Events } from "../events/events";
 import { Groth16Proof, LightClientUpdate } from "../models";
 import { Utils } from "../utils";
+import { SignerService } from "../shared/signer.service";
 
 @Injectable()
 export class LightClientContract {
@@ -18,14 +19,17 @@ export class LightClientContract {
   public head: number = 0;
   public syncCommitteePeriod: number = 0;
 
-  constructor(private readonly networkConfig: NetworkConfig, private readonly eventEmitter: EventEmitter2) {
+  constructor(
+    private readonly signerService: SignerService,
+    private readonly networkConfig: NetworkConfig,
+    private readonly eventEmitter: EventEmitter2
+  ) {
     this.logger = new Logger(`${LightClientContract.name}-${networkConfig.name}`);
     this.name = networkConfig.name;
     this.chainId = networkConfig.chainId;
 
     // Initialise Light Client instance
-    const provider = new ethers.providers.JsonRpcProvider(networkConfig.rpcUrl);
-    const signer = new ethers.Wallet(networkConfig.privateKey, provider);
+    const signer = this.signerService.getManagedSignerFor(networkConfig.privateKey, networkConfig.rpcUrl);
     this.lightClient = new ethers.Contract(networkConfig.outgoing.lightClientContract, BeaconLightClientABI, signer);
 
     // Subscribe to events

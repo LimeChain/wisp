@@ -9,13 +9,16 @@ import { IDataLayer } from "../data-layer/IDataLayer";
 import configuration, { NetworkConfig } from "../configuration";
 import { InboxContract } from "./inbox-contract";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { SharedModule } from "../shared/shared.module";
+import { SignerService } from "../shared/signer.service";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [configuration]
     }),
-    MongooseModule.forFeature([{ name: Message.name, schema: MessagesSchema }])
+    MongooseModule.forFeature([{ name: Message.name, schema: MessagesSchema }]),
+    SharedModule
   ],
   providers: [
     DataLayerService,
@@ -42,13 +45,13 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
     },
     {
       provide: "InboxContracts",
-      useFactory: (config: ConfigService, dataLayer: IDataLayer, eventEmitter: EventEmitter2) => {
+      useFactory: (signerService: SignerService, config: ConfigService, dataLayer: IDataLayer, eventEmitter: EventEmitter2) => {
         const l1RpcUrl = config.get<string>("networks.l1.executionNode.url");
         const networksConfig = config.get<NetworkConfig[]>("networks.rollups");
         return networksConfig.filter(config => config.incoming.supported)
-          .map((config) => new InboxContract(dataLayer, config, l1RpcUrl, networksConfig, eventEmitter));
+          .map((config) => new InboxContract(dataLayer, signerService, config, l1RpcUrl, networksConfig, eventEmitter));
       },
-      inject: [ConfigService, DataLayerService, EventEmitter2]
+      inject: [SignerService, ConfigService, DataLayerService, EventEmitter2]
     }
   ]
 })
