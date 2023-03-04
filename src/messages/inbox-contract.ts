@@ -8,10 +8,10 @@ import { Events } from "../events/events";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import {
   BASE_GOERLI_CONFIG,
+  EthereumProof,
   MPTProofsEncoder,
   OPTIMISM_GOERLI_CONFIG,
-  OptimismExtractoorClient,
-  OutputData
+  OptimismExtractoorClient, OutputData
 } from "extractoor";
 import { MessageDTO } from "./dtos/message.dto";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
@@ -115,10 +115,15 @@ export class InboxContract {
 
     const outboxAddress = this.chain2Outbox.get(message.sourceChainId);
     // Get state proof for the message within the outbox contract inside the source rollup
-    const outboxProofData = await extractoor.optimism.getProof(
-      outboxAddress,
-      messageStorageSlot,
-      ethers.BigNumber.from(rollupStateProofData.blockNum).toHexString()
+    const outboxProofData = await this.retryUntil(() => {
+        return extractoor.optimism.getProof(
+          outboxAddress,
+          messageStorageSlot,
+          ethers.BigNumber.from(rollupStateProofData.blockNum).toHexString()
+        );
+      }, (result: EthereumProof) => {
+        return result.storageProof[0].value != message.hash;
+      }
     );
 
     // Prepare the calldata
@@ -140,7 +145,7 @@ export class InboxContract {
       },
       optimismStateProofsBlob: rollupStateProofData.outputRootRLPProof
     };
-    const MPTInclusionProof: OptimismMessageMIP = {
+    const mptInclusionProof: OptimismMessageMIP = {
       target: outboxAddress,
       slotPosition: messageStorageSlot,
       proofsBlob: inclusionProof
@@ -152,7 +157,7 @@ export class InboxContract {
         ethers.BigNumber.from(rollupStateProofData.l1BlockNumber),
         ethers.BigNumber.from(rollupStateProofData.outputIndex),
         outputProof,
-        MPTInclusionProof
+        mptInclusionProof
       );
       this.logger.log(`Submitted delivery of message. {from =[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}] txHash=[${transaction.hash}] }`);
     } catch (e) {
@@ -163,5 +168,21 @@ export class InboxContract {
   async onMessageReceived(user: string, target: string, hash: string, eventData) {
     this.logger.log(`Message with hash [${hash}] has been processed`);
     await this.dataLayerService.setDeliveryTXHash(hash, eventData.transactionHash);
+  }
+
+  /**
+   * Executes a function until a condition is met
+   * It is used as a hack since Base has an improper cache (ttl ~1sec) set for `eth_getProof`
+   * Context: https://github.com/base-org/node/issues/20
+   * @param func
+   * @param shouldRetry
+   */
+  async retryUntil(func, shouldRetry) {
+    const res = await func();
+    if (shouldRetry(res)) {
+      return await this.retryUntil(func, shouldRetry);
+    } else {
+      return res;
+    }
   }
 }
