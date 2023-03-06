@@ -1,12 +1,14 @@
-# CRC Relayer
+# Wisp Relayer
 
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
 
 ## Description
 
-CRC Relayer node that handles Light Client Optimistic/Finality updates, requests ZKPs from
-a [CRC-Prover API](https://github.com/LimeChain/crc-prover) and updates the on-chain LightClient contract.
+Wisp Relayer node that:
+- Handles Light Client Optimistic/Finality updates, requests ZKPs from
+a [Wisp-Prover API](https://github.com/LimeChain/wisp-prover) and updates the on-chain LightClient contract
+- Watches `Outbox` contracts for Cross-Rollup Messages and relays them to `Inbox` contracts once Light Client state is updated
 
 ## Installation
 
@@ -32,9 +34,6 @@ $ npm run start
 
 # watch mode
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
 ## Test
@@ -52,4 +51,4 @@ $ npm run test:cov
 
 ## License
 
-TODO License
+The code in this project is free software under the [MIT License](LICENSE).
