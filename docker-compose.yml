@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  relayer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+  lodestar-light-client:
+    image: limechain/lodestar-wisp:1.0
+    command:
+      - 'lightclient'
+      - '--network'
+      - 'goerli'
+      - '--beaconApiUrl=https://lodestar-goerli.chainsafe.io'
+      - '--checkpointRoot=${CHECKPOINT_ROOT}'
+      - '--crcApiUrl=http://relayer:8080'
+    depends_on: [relayer]
