@@ -9,25 +9,27 @@ import { SharedModule } from "../shared/shared.module";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { LightClientContract } from "./light-client-contract";
 import { SignerService } from "../shared/signer.service";
+import { PersistenceModule } from "../persistence/persistence.module";
+import { PersistenceService } from "../persistence/persistence.service";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [configuration]
-    }),
+    ConfigModule,
     EventEmitterModule.forRoot(),
+    PersistenceModule,
     SharedModule
   ],
   controllers: [ApiController],
   providers: [BeaconService, ProverService, LightClientService, {
     provide: "LightClients",
-    useFactory: (signer: SignerService, config: ConfigService, eventEmitter: EventEmitter2) => {
+    useFactory: (persistence: PersistenceService, signer: SignerService, config: ConfigService, eventEmitter: EventEmitter2) => {
+      const l1RpcUrl = config.get<string>("networks.l1.executionNode.url");
       // Instantiate LightClient contracts for rollups that support outgoing communication
       return config.get<NetworkConfig[]>("networks.rollups")
         .filter(config => config.outgoing.supported)
-        .map(config => new LightClientContract(signer, config, eventEmitter));
+        .map(config => new LightClientContract(persistence, signer, config, eventEmitter, l1RpcUrl));
     },
-    inject: [SignerService, ConfigService, EventEmitter2]
+    inject: [PersistenceService, SignerService, ConfigService, EventEmitter2]
   }]
 })
 export class LightClientModule {

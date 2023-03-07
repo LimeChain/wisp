@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { MessageDTO } from "./dtos/message.dto";
 import * as Outbox from "../../abis/Outbox.json";
 import { BigNumber, Contract, ethers } from "ethers";
 import { NetworkConfig } from "../configuration";
 import { CRCMessage } from "../models";
 import { PersistenceService } from "../persistence/persistence.service";
+import { MessageDTO } from "../persistence/dtos/message.dto";
 
 @Injectable()
 export class OutboxContract {

@@ -10,17 +10,15 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { SharedModule } from "../shared/shared.module";
 import { SignerService } from "../shared/signer.service";
 import { PersistenceService } from "../persistence/persistence.service";
+import { PersistenceModule } from "../persistence/persistence.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [configuration]
-    }),
-    MongooseModule.forFeature([{ name: Message.name, schema: MessagesSchema }]),
+    ConfigModule,
+    PersistenceModule,
     SharedModule
   ],
   providers: [
-    PersistenceService,
     {
       provide: "OutboxContracts",
       useFactory: (config: ConfigService, persistence: PersistenceService) => {

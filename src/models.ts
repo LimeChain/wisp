@@ -1,4 +1,4 @@
-import { MessageDTO } from "./messages/dtos/message.dto";
+import { MessageDTO } from "./persistence/dtos/message.dto";
 
 export type Groth16Proof = {
   a: string[],

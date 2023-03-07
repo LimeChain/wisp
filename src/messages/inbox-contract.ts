@@ -11,11 +11,11 @@ import {
   OPTIMISM_GOERLI_CONFIG,
   OptimismExtractoorClient, OutputData
 } from "extractoor";
-import { MessageDTO } from "./dtos/message.dto";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
 import { Utils } from "../utils";
 import { SignerService } from "../shared/signer.service";
 import { PersistenceService } from "../persistence/persistence.service";
+import { MessageDTO } from "../persistence/dtos/message.dto";
 
 // Important! `networks.rollups[].name` must match the ones here
 const EXTRACTOOR_CONFIG = {

@@ -7,6 +7,8 @@ import { Events } from "../events/events";
 import { Groth16Proof, LightClientUpdate } from "../models";
 import { Utils } from "../utils";
 import { SignerService } from "../shared/signer.service";
+import { PersistenceService } from "../persistence/persistence.service";
+import { LightClientUpdateDTO } from "../persistence/dtos/light-client-update.dto";
 
 @Injectable()
 export class LightClientContract {
@@ -15,18 +17,22 @@ export class LightClientContract {
   public readonly chainId: number;
   private readonly logger: Logger;
   private readonly lightClient: Contract;
+  private readonly ethereum: ethers.providers.JsonRpcProvider;
 
   public head: number = 0;
   public syncCommitteePeriod: number = 0;
 
   constructor(
+    private readonly persistence: PersistenceService,
     private readonly signerService: SignerService,
     private readonly networkConfig: NetworkConfig,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
+    private readonly l1RpcUrl: string
   ) {
     this.logger = new Logger(`${LightClientContract.name}-${networkConfig.name}`);
     this.name = networkConfig.name;
     this.chainId = networkConfig.chainId;
+    this.ethereum = new ethers.providers.JsonRpcProvider(l1RpcUrl);
 
     // Initialise Light Client instance
     const signer = this.signerService.getManagedSignerFor(networkConfig.privateKey, networkConfig.rpcUrl);
@@ -91,15 +97,31 @@ export class LightClientContract {
     }
   }
 
-  onNewHead(slot: ethers.BigNumber, blockNumber: ethers.BigNumber, executionRoot: string) {
+  async onNewHead(slot: ethers.BigNumber, blockNumber: ethers.BigNumber, executionRoot: string, eventData) {
     this.logger.debug(`New head update received. slot = ${slot}, blockNumber = ${blockNumber}`);
     this.head = slot.toNumber();
+
     this.eventEmitter.emit(Events.LIGHT_CLIENT_NEW_HEAD, {
       chainId: this.chainId,
       slot: slot.toNumber(),
       blockNumber: blockNumber.toNumber(),
       executionRoot: executionRoot
     } as Events.HeadUpdate);
+
+    const [l1Block, l2Block] = await Promise.all([
+      this.ethereum.getBlock(blockNumber.toNumber()),
+      eventData.getBlock()
+    ]);
+    const updateDTO = new LightClientUpdateDTO(
+      this.chainId,
+      eventData.transactionHash,
+      l2Block.timestamp,
+      slot.toNumber(),
+      blockNumber.toNumber(),
+      l1Block.timestamp,
+      executionRoot
+    );
+    await this.persistence.lightClientUpdates.create(updateDTO);
   }
 
   onNewSyncPeriod(period: ethers.BigNumber, root: string) {
