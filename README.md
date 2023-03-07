@@ -16,7 +16,7 @@ a [Wisp-Prover API](https://github.com/LimeChain/wisp-prover) and updates the on
 $ npm install
 ```
 
-## Running the app
+## Development
 
 **Prerequisite**
 
@@ -25,6 +25,15 @@ Copy and example yaml and populate the ENV variables:
 ```markdown
 cp ./config/example.yaml ./config/config.yaml
 ```
+
+### Docker
+
+Execute the following script
+```bash
+bash ./start.sh
+```
+
+### From Source
 
 **Scripts**
 
@@ -36,18 +45,17 @@ $ npm run start
 $ npm run start:dev
 ```
 
-## Test
+**Note**
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
+In order for the relayer to receive light client finality updates, LimeChain's forked lodestar must be started:
+1. Get the current `checkpointRoot` by executing:
+    ```bash
+   curl https://lodestar-goerli.chainsafe.io/eth/v1/beacon/states/finalized/finality_checkpoints | jq ".data.finalized.root" | tr -d '"'
+    ```
+2. Start the `lodestar-wisp1:0` image, populating the returned `checkpointRoot:
+    ```bash
+     docker run limechain/lodestar-wisp:1.0 lightclient --network goerli --beaconApiUrl=https://lodestar-goerli.chainsafe.io --checkpointRoot=${CHECKPOINT_ROOT} --crcApiUrl=http://relayer:8080
+    ```
 
 ## License
 
