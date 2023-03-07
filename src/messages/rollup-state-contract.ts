@@ -1,9 +1,8 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER } from "../constants";
-import { IDataLayer } from "src/data-layer/IDataLayer";
+import { Injectable, Logger } from "@nestjs/common";
 import { BigNumber, Contract, ethers } from "ethers";
 import * as L1RollupStateContract from "../../abis/Optimism/OutputOracle.json";
 import { NetworkConfig } from "../configuration";
+import { PersistenceService } from "../persistence/persistence.service";
 
 @Injectable()
 export class RollupStateContract {
@@ -13,8 +12,7 @@ export class RollupStateContract {
   private readonly l1RollupState: Contract;
 
   constructor(
-    @Inject(DATA_LAYER)
-    private readonly dataLayerService: IDataLayer,
+    private readonly persistence: PersistenceService,
     private readonly networkConfig: NetworkConfig,
     private readonly l1RpcUrl: string
   ) {

@@ -1,16 +1,15 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Message, MessagesSchema } from "src/database/schemas/message.schema";
-import { DataLayerService } from "src/data-layer/data-layer.service";
+import { Message, MessagesSchema } from "src/persistence/schemas/message.schema";
 import { OutboxContract } from "./outbox-contract";
 import { RollupStateContract } from "./rollup-state-contract";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { IDataLayer } from "../data-layer/IDataLayer";
 import configuration, { NetworkConfig } from "../configuration";
 import { InboxContract } from "./inbox-contract";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { SharedModule } from "../shared/shared.module";
 import { SignerService } from "../shared/signer.service";
+import { PersistenceService } from "../persistence/persistence.service";
 
 @Module({
   imports: [
@@ -21,37 +20,37 @@ import { SignerService } from "../shared/signer.service";
     SharedModule
   ],
   providers: [
-    DataLayerService,
+    PersistenceService,
     {
       provide: "OutboxContracts",
-      useFactory: (config: ConfigService, dataLayer: IDataLayer) => {
+      useFactory: (config: ConfigService, persistence: PersistenceService) => {
         // Instantiate Outbox contract listeners for rollups that support outgoing communication
         return config.get<NetworkConfig[]>("networks.rollups")
           .filter(config => config.outgoing.supported)
-          .map((config) => new OutboxContract(dataLayer, config));
+          .map((config) => new OutboxContract(persistence, config));
       },
-      inject: [ConfigService, DataLayerService]
+      inject: [ConfigService, PersistenceService]
     },
     {
       provide: "RollupStateContracts",
-      useFactory: (config: ConfigService, dataLayer: IDataLayer) => {
+      useFactory: (config: ConfigService, persistence: PersistenceService) => {
         const l1RpcUrl = config.get<string>("networks.l1.executionNode.url");
         // Instantiate Rollup contract listeners for rollups that support outgoing communication
         return config.get<NetworkConfig[]>("networks.rollups")
           .filter(config => config.outgoing.supported)
-          .map((config) => new RollupStateContract(dataLayer, config, l1RpcUrl));
+          .map((config) => new RollupStateContract(persistence, config, l1RpcUrl));
       },
-      inject: [ConfigService, DataLayerService]
+      inject: [ConfigService, PersistenceService]
     },
     {
       provide: "InboxContracts",
-      useFactory: (signerService: SignerService, config: ConfigService, dataLayer: IDataLayer, eventEmitter: EventEmitter2) => {
+      useFactory: (signerService: SignerService, config: ConfigService, persistence: PersistenceService, eventEmitter: EventEmitter2) => {
         const l1RpcUrl = config.get<string>("networks.l1.executionNode.url");
         const networksConfig = config.get<NetworkConfig[]>("networks.rollups");
         return networksConfig.filter(config => config.incoming.supported)
-          .map((config) => new InboxContract(dataLayer, signerService, config, l1RpcUrl, networksConfig, eventEmitter));
+          .map((config) => new InboxContract(persistence, signerService, config, l1RpcUrl, networksConfig, eventEmitter));
       },
-      inject: [SignerService, ConfigService, DataLayerService, EventEmitter2]
+      inject: [SignerService, ConfigService, PersistenceService, EventEmitter2]
     }
   ]
 })

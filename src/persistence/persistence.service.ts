@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { Message, MessagesDocument } from "./schemas/message.schema";
 import { Model } from "mongoose";
-import { Message, MessagesDocument } from "../database/schemas/message.schema";
-import { MessageDTO } from "src/messages/dtos/message.dto";
-import { IDataLayer } from "./IDataLayer";
+import { MessageDTO } from "../messages/dtos/message.dto";
+
 
 @Injectable()
-export class DataLayerService implements IDataLayer {
+export class PersistenceService {
 
-  private readonly logger = new Logger(DataLayerService.name);
+  private readonly logger = new Logger(PersistenceService.name);
 
   constructor(
     @InjectModel(Message.name)

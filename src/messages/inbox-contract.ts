@@ -1,6 +1,4 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER } from "src/constants";
-import { IDataLayer } from "src/data-layer/IDataLayer";
+import { Injectable, Logger } from "@nestjs/common";
 import { NetworkConfig } from "../configuration";
 import { BigNumber, Contract, ethers } from "ethers";
 import * as Inbox from "../../abis/Optimism/OptimismInbox.json";
@@ -17,6 +15,7 @@ import { MessageDTO } from "./dtos/message.dto";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
 import { Utils } from "../utils";
 import { SignerService } from "../shared/signer.service";
+import { PersistenceService } from "../persistence/persistence.service";
 
 // Important! `networks.rollups[].name` must match the ones here
 const EXTRACTOOR_CONFIG = {
@@ -40,8 +39,7 @@ export class InboxContract {
   private readonly MESSAGES_ARRAY_STORAGE_KEY: BigNumber;
 
   constructor(
-    @Inject(DATA_LAYER)
-    private readonly dataLayerService: IDataLayer,
+    private readonly persistence: PersistenceService,
     private readonly signerService: SignerService,
     private readonly inboxChainConfig: NetworkConfig,
     private readonly l1RpcUrl: string,
@@ -80,7 +78,7 @@ export class InboxContract {
     if (payload.chainId != this.chainId) {
       return;
     }
-    const messages: MessageDTO[] = await this.dataLayerService.getUndeliveredMessages(this.chainId, payload.blockNumber);
+    const messages: MessageDTO[] = await this.persistence.getUndeliveredMessages(this.chainId, payload.blockNumber);
 
     if (messages.length > 0) {
       this.logger.log(`Light Client head updated to L1 Block [${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);

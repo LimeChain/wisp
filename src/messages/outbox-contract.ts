@@ -1,11 +1,10 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { DATA_LAYER } from "../constants";
-import { IDataLayer } from "src/data-layer/IDataLayer";
 import { MessageDTO } from "./dtos/message.dto";
 import * as Outbox from "../../abis/Outbox.json";
 import { BigNumber, Contract, ethers } from "ethers";
 import { NetworkConfig } from "../configuration";
 import { CRCMessage } from "../models";
+import { PersistenceService } from "../persistence/persistence.service";
 
 @Injectable()
 export class OutboxContract {
@@ -15,8 +14,7 @@ export class OutboxContract {
   private readonly outbox: Contract;
 
   constructor(
-    @Inject(DATA_LAYER)
-    private readonly dataLayerService: IDataLayer,
+    private readonly persistence: PersistenceService,
     private readonly networkConfig: NetworkConfig
   ) {
     this.logger = new Logger(`${OutboxContract.name}-${networkConfig.name}`);
