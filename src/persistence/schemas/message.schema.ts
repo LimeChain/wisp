@@ -52,12 +52,18 @@ export class Message {
   public l1BlockNumber: number;
 
   @Prop()
-  @IsOptional()
   public sourceChainTxHash: string;
+
+  @Prop()
+  public sourceChainTxTimestamp: number;
 
   @Prop()
   @IsOptional()
   public targetChainTxHash: string;
+
+  @Prop()
+  @IsOptional()
+  public targetChainTxTimestamp: number;
 }
 
 export type MessagesDocument = Message & Document;

@@ -20,15 +20,20 @@ export class PersistenceService {
     return await this.messagesModel.create(message);
   }
 
-  async setDeliveryTXHash(messageHash: string, targetChainTxHash: string) {
+  async updateDelivered(messageHash: string, targetChainTxHash: string, txTimestamp: number) {
     const updated = await this.messagesModel.updateMany(
       { hash: messageHash },
-      { $set: { targetChainTxHash: targetChainTxHash } }
+      {
+        $set: {
+          targetChainTxHash: targetChainTxHash,
+          targetChainTxTimestamp: txTimestamp
+        }
+      }
     );
     if (updated.modifiedCount == 0) {
-      this.logger.debug(`Error while setting target chain tx hash for message. Message with hash=[${messageHash}] was not found`);
+      this.logger.debug(`Error while updating state to delivered. Message with hash=[${messageHash}] was not found`);
     } else if (updated.modifiedCount == 1) {
-      this.logger.debug(`Populated target chain tx hash for message [${messageHash}]`);
+      this.logger.debug(`Updated message to delivered. hash [${messageHash}]`);
     } else {
       this.logger.warn(`Multiple messages found with hash=[${messageHash}]`);
     }

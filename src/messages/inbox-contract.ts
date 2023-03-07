@@ -165,7 +165,8 @@ export class InboxContract {
 
   async onMessageReceived(user: string, target: string, hash: string, eventData) {
     this.logger.log(`Message with hash [${hash}] has been processed`);
-    await this.dataLayerService.setDeliveryTXHash(hash, eventData.transactionHash);
+    const block = await eventData.getBlock();
+    await this.persistence.updateDelivered(hash, eventData.transactionHash, block.timestamp);
   }
 
   /**
