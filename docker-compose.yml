@@ -16,3 +16,4 @@ services:
       - '--checkpointRoot=${CHECKPOINT_ROOT}'
       - '--crcApiUrl=http://relayer:8080'
     depends_on: [relayer]
+    restart: always
