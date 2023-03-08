@@ -172,7 +172,7 @@ export class InboxContract {
       );
       this.logger.log(`Submitted delivery of message. {from =[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}] txHash=[${transaction.hash}] }`);
     } catch (e) {
-      this.logger.log(`Transaction for delivery of message will fail. {from=[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}]}. Error: ${e.error.reason}`);
+      this.logger.log(`Transaction for delivery of message will fail. {from=[${this.chain2Name.get(message.sourceChainId)}] msgHash=[${message.hash}]}. Error: ${e}`);
     }
   }
 
