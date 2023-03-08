@@ -4,7 +4,7 @@ import { BeaconService } from "./beacon/beacon.service";
 import { LightClientService } from "./light-client.service";
 import { ProverService } from "./prover/prover.service";
 import { ApiController } from "./api.controller";
-import configuration, { NetworkConfig } from "../configuration";
+import { NetworkConfig } from "../configuration";
 import { SharedModule } from "../shared/shared.module";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { LightClientContract } from "./light-client-contract";

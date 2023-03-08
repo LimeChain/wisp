@@ -101,17 +101,21 @@ export class LightClientContract {
     this.logger.debug(`New head update received. slot = ${slot}, blockNumber = ${blockNumber}`);
     this.head = slot.toNumber();
 
+    const [l1Block, l2Block, transaction] = await Promise.all([
+      this.ethereum.getBlock(blockNumber.toNumber()),
+      eventData.getBlock(),
+      eventData.getTransactionReceipt()
+    ]);
+
     this.eventEmitter.emit(Events.LIGHT_CLIENT_NEW_HEAD, {
       chainId: this.chainId,
       slot: slot.toNumber(),
       blockNumber: blockNumber.toNumber(),
-      executionRoot: executionRoot
+      executionRoot: executionRoot,
+      transactionCost: transaction.l1GasUsed.mul(transaction.l1GasPrice).mul(transaction.l1FeeScalar)
+        .add(transaction.effectiveGasPrice.mul(transaction.gasUsed))
     } as Events.HeadUpdate);
 
-    const [l1Block, l2Block] = await Promise.all([
-      this.ethereum.getBlock(blockNumber.toNumber()),
-      eventData.getBlock()
-    ]);
     const updateDTO = new LightClientUpdateDTO(
       this.chainId,
       eventData.transactionHash,

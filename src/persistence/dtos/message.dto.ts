@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { IsNumber, IsNumberString, IsOptional, IsString } from "class-validator";
 import { CRCMessage } from "../../models";
 
 export class MessageDTO {
@@ -23,6 +23,8 @@ export class MessageDTO {
     this.sourceChainTxTimestamp = txTimestamp;
     this.targetChainTxHash = null;
     this.targetChainTxTimestamp = 0;
+    this.deliveryCost = null;
+    this.stateRelayCost = null;
   }
 
   @IsNumber()
@@ -84,4 +86,12 @@ export class MessageDTO {
   @IsNumber()
   @IsOptional()
   l1BlockNumber: number;
+
+  @IsNumberString()
+  @IsOptional()
+  deliveryCost: string;
+
+  @IsNumberString()
+  @IsOptional()
+  stateRelayCost: string
 }

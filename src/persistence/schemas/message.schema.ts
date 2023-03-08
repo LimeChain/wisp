@@ -64,9 +64,17 @@ export class Message {
   @Prop()
   @IsOptional()
   public targetChainTxTimestamp: number;
+
+  @Prop()
+  @IsOptional()
+  public deliveryCost: string;
+
+  @Prop()
+  @IsOptional()
+  public stateRelayCost: string
 }
 
 export type MessagesDocument = Message & Document;
 
 export const MessagesSchema = SchemaFactory.createForClass(Message);
-MessagesSchema.index({ blockNumber: 1, _id: 1 });
+MessagesSchema.index({ hash: 1 });

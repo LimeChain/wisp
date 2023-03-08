@@ -23,17 +23,22 @@ export class PersistenceService {
     return this.lightClientUpdatesModel;
   }
 
+  get messages() {
+    return this.messagesModel;
+  }
+
   createMessage(message: MessageDTO) {
     return this.messagesModel.create(message);
   }
 
-  async updateDelivered(messageHash: string, targetChainTxHash: string, txTimestamp: number) {
+  async updateDelivered(messageHash: string, targetChainTxHash: string, txTimestamp: number, deliveryCost: string) {
     const updated = await this.messagesModel.updateMany(
       { hash: messageHash },
       {
         $set: {
           targetChainTxHash: targetChainTxHash,
-          targetChainTxTimestamp: txTimestamp
+          targetChainTxTimestamp: txTimestamp,
+          deliveryCost: deliveryCost
         }
       }
     );

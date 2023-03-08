@@ -1,3 +1,5 @@
+import { BigNumber } from "ethers";
+
 export namespace Events {
   // Emitted when new LightClientUpdate is prepared and must be broadcast to light client contracts
   export const LIGHT_CLIENT_HEAD_UPDATE = "light-client.head-update";
@@ -11,7 +13,8 @@ export namespace Events {
     chainId: number,
     slot: number,
     blockNumber: number,
-    executionRoot: string
+    executionRoot: string,
+    transactionCost: BigNumber
   }
 
   // Emitted when new sync committee has been received from the chain

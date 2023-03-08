@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ethers } from "ethers";
 import { NonceManager } from "@ethersproject/experimental";
+import { asL2Provider } from "@eth-optimism/sdk";
 
 @Injectable()
 export class SignerService {
@@ -16,7 +17,7 @@ export class SignerService {
   getManagedSignerFor(privateKey: string, rpcUrl: string) {
     const key = `${privateKey}-${rpcUrl}`;
     if (!this.signers.has(key)) {
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const provider = asL2Provider(new ethers.providers.JsonRpcProvider(rpcUrl));
       const wallet = new ethers.Wallet(privateKey, provider);
       const nonceManaged = new NonceManager(wallet);
       this.signers.set(key, nonceManaged);

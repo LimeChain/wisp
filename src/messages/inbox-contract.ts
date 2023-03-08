@@ -9,7 +9,8 @@ import {
   EthereumProof,
   MPTProofsEncoder,
   OPTIMISM_GOERLI_CONFIG,
-  OptimismExtractoorClient, OutputData
+  OptimismExtractoorClient,
+  OutputData
 } from "extractoor";
 import { CRCMessage, OptimismMessageMIP, OptimismOutputRootMIP } from "../models";
 import { Utils } from "../utils";
@@ -79,26 +80,38 @@ export class InboxContract {
       return;
     }
     const messages: MessageDTO[] = await this.persistence.getUndeliveredMessages(this.chainId, payload.blockNumber);
-
     if (messages.length > 0) {
       this.logger.log(`Light Client head updated to L1 Block [${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);
-      const messagesMap = messages.reduce((acc, msg) => {
-        const messagesForChain = acc.get(msg.sourceChainId) || [];
-        messagesForChain.push(msg);
-        acc.set(msg.sourceChainId, messagesForChain);
-        return acc;
-      }, new Map<number, MessageDTO[]>());
-      const messageGroupsPerChain = Array.from(messagesMap.entries());
-      // Process messages per chain in parallel
-      await Promise.all(messageGroupsPerChain.map(async ([chain, messages]) => {
-        const extractoor = this.chain2Extractoor.get(chain);
-        const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
-        // Processing of messages for a given chain in parallel
-        await Promise.all(messages.map(msg => this.process(extractoor, rollupStateProofData, msg)));
-      }));
+      await Promise.all([
+        this.processMessages(payload, messages),
+        this.processStateRelayFee(payload, messages)
+      ]);
     } else {
       this.logger.log(`Light Client updated to L1 Block [${payload.blockNumber}]. No messages found for processing`);
     }
+  }
+
+  private async processMessages(payload: Events.HeadUpdate, messages: MessageDTO[]) {
+    // Group messages by source chain
+    const messagesMap = messages.reduce((acc, msg) => {
+      const messagesForChain = acc.get(msg.sourceChainId) || [];
+      messagesForChain.push(msg);
+      acc.set(msg.sourceChainId, messagesForChain);
+      return acc;
+    }, new Map<number, MessageDTO[]>());
+    const messageGroupsPerChain = Array.from(messagesMap.entries());
+    // Process messages per chain in parallel
+    await Promise.all(messageGroupsPerChain.map(async ([chain, messages]) => {
+      const extractoor = this.chain2Extractoor.get(chain);
+      const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
+      // Processing of messages for a given chain in parallel
+      await Promise.all(messages.map(msg => this.processMessage(extractoor, rollupStateProofData, msg)));
+    }));
+  }
+
+  private async processStateRelayFee(payload: Events.HeadUpdate, messages: MessageDTO[]) {
+    const costPerMsg = payload.transactionCost.div(messages.length);
+    await this.populateStateRelayCost(messages, costPerMsg.toString());
   }
 
   /**
@@ -107,7 +120,7 @@ export class InboxContract {
    * @param rollupStateProofData
    * @param message
    */
-  async process(extractoor: OptimismExtractoorClient, rollupStateProofData: OutputData, message: MessageDTO) {
+  async processMessage(extractoor: OptimismExtractoorClient, rollupStateProofData: OutputData, message: MessageDTO) {
     // Compute storage slot of the message inside the outbox contract in `source` rollup
     const messageStorageSlot = ethers.utils.hexlify(this.MESSAGES_ARRAY_STORAGE_KEY.add(message.index));
 
@@ -165,8 +178,10 @@ export class InboxContract {
 
   async onMessageReceived(user: string, target: string, hash: string, eventData) {
     this.logger.log(`Message with hash [${hash}] has been processed`);
-    const block = await eventData.getBlock();
-    await this.persistence.updateDelivered(hash, eventData.transactionHash, block.timestamp);
+    const [block, transaction] = await Promise.all([eventData.getBlock(), eventData.getTransactionReceipt()]);
+    const txCost = transaction.l1GasUsed.mul(transaction.l1GasPrice).mul(transaction.l1FeeScalar)
+      .add(transaction.effectiveGasPrice.mul(transaction.gasUsed));
+    await this.persistence.updateDelivered(hash, eventData.transactionHash, block.timestamp, txCost.toString());
   }
 
   /**
@@ -183,5 +198,14 @@ export class InboxContract {
     } else {
       return res;
     }
+  }
+
+  private async populateStateRelayCost(messages: MessageDTO[], costPerMsg: string) {
+    const hashes = messages.map((m) => m.hash);
+    const result = await this.persistence.messages.updateMany(
+      { hash: { $in: hashes } },
+      { $set: { stateRelayCost: costPerMsg } }
+    );
+    this.logger.debug(`Populated StateRelayCost for [${result.modifiedCount}] messages`);
   }
 }
