@@ -105,7 +105,7 @@ export class InboxContract {
       const extractoor = this.chain2Extractoor.get(chain);
       const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
       // Processing of messages for a given chain in parallel
-      await Promise.all(messages.map(msg => this.processMessage(extractoor, rollupStateProofData, msg)));
+      await Promise.all(messages.map(msg => this.processMessage.bind(this)(extractoor, rollupStateProofData, msg)));
     }));
   }
 
@@ -133,7 +133,7 @@ export class InboxContract {
           ethers.BigNumber.from(rollupStateProofData.blockNum).toHexString()
         );
       }, (result: EthereumProof) => {
-        return result.storageProof[0].value != message.hash;
+        return ethers.BigNumber.from(result.storageProof[0].value).toHexString() != message.hash;
       }
     );
 
@@ -194,6 +194,8 @@ export class InboxContract {
   async retryUntil(func, shouldRetry) {
     const res = await func();
     if (shouldRetry(res)) {
+      this.logger.debug(`Retrying call to provider in 1 sec`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return await this.retryUntil(func, shouldRetry);
     } else {
       return res;
