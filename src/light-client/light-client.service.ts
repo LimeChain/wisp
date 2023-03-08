@@ -52,13 +52,16 @@ export class LightClientService {
    */
   async onModuleInit() {
     await Promise.all(this.lightClients.map(lc => lc.initialiseState()));
+    const blockNumbers = [];
     this.lightClients.forEach(lc => {
       this.chain2Head.set(lc.chainId, lc.head);
       this.chain2Period.set(lc.chainId, lc.syncCommitteePeriod);
+      blockNumbers.push({chainId: lc.chainId, blockNumber: lc.headBlockNumber});
     });
 
     this._recalculateHead();
     this._recalculatePeriodUpdate();
+    this.eventEmitter.emit(Events.LIGHT_CLIENT_INITIALISED, blockNumbers);
   }
 
   onNewSyncPeriod(payload: Events.SyncCommitteeUpdate) {

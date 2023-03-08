@@ -65,8 +65,20 @@ export class InboxContract {
 
     // Subscribe to new Light Client head updates
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewLightClientUpdate.bind(this));
+    this.eventEmitter.on(Events.LIGHT_CLIENT_INITIALISED, this.onLightClientInitialised.bind(this));
     this.inbox.on("MessageReceived", this.onMessageReceived.bind(this));
     this.logger.log(`Instantiated contract at ${this.inbox.address}`);
+  }
+
+  async onLightClientInitialised(lightClientStates) {
+    const payload = lightClientStates.filter(p => p.chainId == this.chainId)[0];
+    const messages: MessageDTO[] = await this.persistence.getUndeliveredMessages(payload.chainId, payload.blockNumber);
+    if (messages.length > 0) {
+      this.logger.log(`Found [${messages.length}] message(s) ready for processing on init`);
+      await this.processMessages(messages, payload.blockNumber);
+    } else {
+      this.logger.log(`No messages were found ready for processing on init`)
+    }
   }
 
   /**
@@ -83,15 +95,15 @@ export class InboxContract {
     if (messages.length > 0) {
       this.logger.log(`Light Client head updated to L1 Block [${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);
       await Promise.all([
-        this.processMessages(payload, messages),
-        this.processStateRelayFee(payload, messages)
+        this.processMessages(messages, payload.blockNumber),
+        this.processStateRelayFee(messages, payload.transactionCost)
       ]);
     } else {
       this.logger.log(`Light Client updated to L1 Block [${payload.blockNumber}]. No messages found for processing`);
     }
   }
 
-  private async processMessages(payload: Events.HeadUpdate, messages: MessageDTO[]) {
+  private async processMessages(messages: MessageDTO[], blockNumber: number) {
     // Group messages by source chain
     const messagesMap = messages.reduce((acc, msg) => {
       const messagesForChain = acc.get(msg.sourceChainId) || [];
@@ -103,14 +115,14 @@ export class InboxContract {
     // Process messages per chain in parallel
     await Promise.all(messageGroupsPerChain.map(async ([chain, messages]) => {
       const extractoor = this.chain2Extractoor.get(chain);
-      const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(payload.blockNumber));
+      const rollupStateProofData = await extractoor.generateLatestOutputData(ethers.utils.hexlify(blockNumber));
       // Processing of messages for a given chain in parallel
       await Promise.all(messages.map(msg => this.processMessage.bind(this)(extractoor, rollupStateProofData, msg)));
     }));
   }
 
-  private async processStateRelayFee(payload: Events.HeadUpdate, messages: MessageDTO[]) {
-    const costPerMsg = payload.transactionCost.div(messages.length);
+  private async processStateRelayFee(messages: MessageDTO[], transactionCost: ethers.BigNumber) {
+    const costPerMsg = transactionCost.div(messages.length);
     await this.populateStateRelayCost(messages, costPerMsg.toString());
   }
 

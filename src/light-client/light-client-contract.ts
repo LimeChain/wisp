@@ -20,6 +20,7 @@ export class LightClientContract {
   private readonly ethereum: ethers.providers.JsonRpcProvider;
 
   public head: number = 0;
+  public headBlockNumber: number = 0;
   public syncCommitteePeriod: number = 0;
 
   constructor(
@@ -51,8 +52,14 @@ export class LightClientContract {
    * Loads the `head` and `sync period`
    */
   async initialiseState() {
-    this.syncCommitteePeriod = (await this.lightClient.latestSyncCommitteePeriod() as ethers.BigNumber).toNumber();
-    this.head = (await this.lightClient.headSlot() as ethers.BigNumber).toNumber();
+    const [syncCommitteePeriod, headSlot, headBlock] = await Promise.all([
+      this.lightClient.latestSyncCommitteePeriod() as ethers.BigNumber,
+      this.lightClient.headSlot() as ethers.BigNumber,
+      this.lightClient.headBlockNumber() as ethers.BigNumber
+    ]);
+    this.syncCommitteePeriod = syncCommitteePeriod.toNumber();
+    this.head = headSlot.toNumber();
+    this.headBlockNumber = headBlock.toNumber();
     this.logger.log(`Initialised contract state. slot = ${this.head}, period = ${this.syncCommitteePeriod}`);
   }
 
