@@ -58,12 +58,19 @@ export class Message {
   public sourceChainTxTimestamp: number;
 
   @Prop()
+  public l1ChainTxHash: string;
+
+  @Prop()
   @IsOptional()
   public targetChainTxHash: string;
 
   @Prop()
   @IsOptional()
   public targetChainTxTimestamp: number;
+
+  @Prop()
+  @IsOptional()
+  public targetChainTXBlockNumber: number;
 
   @Prop()
   @IsOptional()

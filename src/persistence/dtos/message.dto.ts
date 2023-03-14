@@ -21,10 +21,12 @@ export class MessageDTO {
     this.l1BlockNumber = 0;
     this.sourceChainTxHash = txHash;
     this.sourceChainTxTimestamp = txTimestamp;
+    this.l1ChainTxHash = null;
     this.targetChainTxHash = null;
     this.targetChainTxTimestamp = 0;
     this.deliveryCost = null;
     this.stateRelayCost = null;
+    this.targetChainTXBlockNumber = 0;
   }
 
   @IsNumber()
@@ -76,12 +78,19 @@ export class MessageDTO {
   sourceChainTxTimestamp: number;
 
   @IsString()
+  l1ChainTxHash: string;
+
+  @IsString()
   @IsOptional()
   targetChainTxHash: string;
 
   @IsNumber()
   @IsOptional()
   targetChainTxTimestamp: number;
+
+  @IsNumber()
+  @IsOptional()
+  targetChainTXBlockNumber: number;
 
   @IsNumber()
   @IsOptional()

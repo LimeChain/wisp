@@ -193,7 +193,7 @@ export class InboxContract {
     const [block, transaction] = await Promise.all([eventData.getBlock(), eventData.getTransactionReceipt()]);
     const txCost = transaction.l1GasUsed.mul(transaction.l1GasPrice).mul(transaction.l1FeeScalar)
       .add(transaction.effectiveGasPrice.mul(transaction.gasUsed));
-    await this.persistence.updateDelivered(hash, eventData.transactionHash, block.timestamp, txCost.toString());
+    await this.persistence.updateDelivered(hash, eventData.transactionHash, block.timestamp, txCost.toString(), eventData.blockNumber);
   }
 
   /**
