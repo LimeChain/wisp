@@ -1,6 +1,6 @@
 import { Body, Controller, Logger, Post } from "@nestjs/common";
-import { altair } from "@lodestar/types";
 import { LightClientService } from "./light-client.service";
+import { lodestar } from "../lodestar-types";
 
 @Controller("/api/v1")
 export class ApiController {
@@ -11,9 +11,8 @@ export class ApiController {
 
   @Post("/finality_update")
   finalityUpdate(@Body() body: any) {
-    const update = body as altair.LightClientUpdate;
+    const update = lodestar.ssz.altair.LightClientFinalityUpdate.fromJson(body);
     this.logger.debug(`Received new finality update for slot = ${update.finalizedHeader.beacon.slot}`);
-    const startTime = Date.now();
     // Start the processing asynchronously
     this.lightClientService.processFinalityUpdate(update);
   }
