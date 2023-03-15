@@ -168,9 +168,9 @@ export class LightClientService {
     // 2. Compute the Root + MerkleInclusionProof branches while waiting for proof
     const nextSyncCommitteeRoot = ethers.utils.hexlify(lodestar.ssz.altair.SyncCommittee.hashTreeRoot(beaconState.nextSyncCommittee));
     const merkleInclusionProof = createProof(
-      lodestar.ssz.bellatrix.BeaconState.toView(beaconState).node, {
+      lodestar.ssz.capella.BeaconState.toView(beaconState).node, {
         type: ProofType.single,
-        gindex: lodestar.ssz.bellatrix.BeaconState.getPathInfo(["nextSyncCommittee"]).gindex
+        gindex: lodestar.ssz.capella.BeaconState.getPathInfo(["nextSyncCommittee"]).gindex
       }
     ) as SingleProof;
     const nextSyncCommitteeRootBranch = merkleInclusionProof.witnesses.map(witnessNode => {
@@ -189,18 +189,18 @@ export class LightClientService {
   private async buildLightClientUpdate(update: altair.LightClientUpdate): Promise<LightClientUpdate> {
     const finalizedBeaconBody = await this.beaconService.getBeaconBlockBody(update.finalizedHeader.beacon.slot);
     const executionStateRootMIP = createProof(
-      lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody).node, {
+      lodestar.ssz.capella.BeaconBlockBody.toView(finalizedBeaconBody).node, {
         type: ProofType.single,
-        gindex: lodestar.ssz.bellatrix.BeaconBlockBody.getPathInfo(["executionPayload", "stateRoot"]).gindex
+        gindex: lodestar.ssz.capella.BeaconBlockBody.getPathInfo(["executionPayload", "stateRoot"]).gindex
       }
     ) as SingleProof;
     const executionStateRootBranch = executionStateRootMIP.witnesses.map(witnessNode => {
       return ethers.utils.hexlify(witnessNode);
     });
     const blockNumberMIP = createProof(
-      lodestar.ssz.bellatrix.BeaconBlockBody.toView(finalizedBeaconBody).node, {
+      lodestar.ssz.capella.BeaconBlockBody.toView(finalizedBeaconBody).node, {
         type: ProofType.single,
-        gindex: lodestar.ssz.bellatrix.BeaconBlockBody.getPathInfo(["executionPayload", "blockNumber"]).gindex
+        gindex: lodestar.ssz.capella.BeaconBlockBody.getPathInfo(["executionPayload", "blockNumber"]).gindex
       }
     ) as SingleProof;
     const blockNumberBranch = blockNumberMIP.witnesses.map(witnessNode => {

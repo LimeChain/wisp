@@ -60,7 +60,7 @@ export class BeaconService {
   async getBeaconBlockBody(slot: number) {
     const response = await fetch(`${this.baseUrl + BEACON_API_V2}blocks/${slot}`);
     const beaconBlockBody = (await response.json())['data']['message']['body'];
-    return lodestar.ssz.bellatrix.BeaconBlockBody.fromJson(beaconBlockBody);
+    return lodestar.ssz.capella.BeaconBlockBody.fromJson(beaconBlockBody);
   }
 
   async getGenesisValidatorRoot(): Promise<string> {
@@ -89,6 +89,6 @@ export class BeaconService {
   async getBeaconState(slot: number) {
     const response = await fetch(`${this.baseUrl + BEACON_STATE_API}/${slot}`);
     const beaconState = (await response.json())['data'];
-    return lodestar.ssz.bellatrix.BeaconState.fromJson(beaconState);
+    return lodestar.ssz.capella.BeaconState.fromJson(beaconState);
   }
 }
