@@ -52,6 +52,10 @@ export class Message {
   public l1BlockNumber: number;
 
   @Prop()
+  @IsOptional()
+  public l1BlockTimestamp: number;
+
+  @Prop()
   public sourceChainTxHash: string;
 
   @Prop()

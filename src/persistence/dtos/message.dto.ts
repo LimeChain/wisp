@@ -19,6 +19,7 @@ export class MessageDTO {
     this.deliveryFee = message.deliveryFee;
     this.l2BlockNumber = l2BlockNumber;
     this.l1BlockNumber = 0;
+    this.l1BlockTimestamp = 0;
     this.sourceChainTxHash = txHash;
     this.sourceChainTxTimestamp = txTimestamp;
     this.l1ChainTxHash = null;
@@ -95,6 +96,10 @@ export class MessageDTO {
   @IsNumber()
   @IsOptional()
   l1BlockNumber: number;
+
+  @IsNumber()
+  @IsOptional()
+  l1BlockTimestamp: number
 
   @IsNumberString()
   @IsOptional()
