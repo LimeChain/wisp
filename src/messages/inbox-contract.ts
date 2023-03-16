@@ -77,7 +77,7 @@ export class InboxContract {
       this.logger.log(`Found [${messages.length}] message(s) ready for processing on init`);
       await this.processMessages(messages, payload.blockNumber);
     } else {
-      this.logger.log(`No messages were found ready for processing on init`)
+      this.logger.log(`No messages were found ready for processing on init`);
     }
   }
 
@@ -206,8 +206,8 @@ export class InboxContract {
   async retryUntil(func, shouldRetry) {
     const res = await func();
     if (shouldRetry(res)) {
-      this.logger.debug(`Retrying call to provider in 1 sec`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      this.logger.debug(`Retrying call to provider in 3 sec`);
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       return await this.retryUntil(func, shouldRetry);
     } else {
       return res;
