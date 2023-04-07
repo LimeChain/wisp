@@ -72,7 +72,7 @@ export class InboxContract {
 
   async onLightClientInitialised(lightClientStates) {
     const payload = lightClientStates.filter(p => p.chainId == this.chainId)[0];
-    const messages: MessageDTO[] = await this.persistence.getUndeliveredMessages(payload.chainId, payload.blockNumber);
+    const messages: MessageDTO[] = await this.persistence.getReadyUndeliveredMessages(payload.chainId, payload.blockNumber);
     if (messages.length > 0) {
       this.logger.log(`Found [${messages.length}] message(s) ready for processing on init`);
       await this.processMessages(messages, payload.blockNumber);
@@ -91,7 +91,7 @@ export class InboxContract {
     if (payload.chainId != this.chainId) {
       return;
     }
-    const messages: MessageDTO[] = await this.persistence.getUndeliveredMessages(this.chainId, payload.blockNumber);
+    const messages: MessageDTO[] = await this.persistence.getReadyUndeliveredMessages(this.chainId, payload.blockNumber);
     if (messages.length > 0) {
       this.logger.log(`Light Client head updated to L1 Block [${payload.blockNumber}]. Found [${messages.length}] message(s) for processing`);
       await Promise.all([

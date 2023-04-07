@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: always
   lodestar-light-client:
-    image: limechain/lodestar-wisp:1.0
+    image: limechain/lodestar-wisp:1.2
     command:
       - 'lightclient'
       - '--network'

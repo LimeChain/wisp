@@ -57,16 +57,21 @@ export class PersistenceService {
       { sourceChainId, l1BlockNumber: 0 },
       { $set: { l1BlockNumber, l1ChainTxHash, l1BlockTimestamp } }
     );
-    if (result.modifiedCount > 0) {
-      this.logger.log(`Populated L1 block number for ${result.modifiedCount} message(s)`);
-    }
+    return result.modifiedCount;
   }
 
-  getUndeliveredMessages(targetChainId: number, l1BlockNumber: number) {
+  getReadyUndeliveredMessages(targetChainId: number, l1BlockNumber: number) {
     return this.messagesModel.find({
       targetChainTxHash: null,
       targetChainId: targetChainId,
       l1BlockNumber: { $lte: l1BlockNumber, $ne: 0 }
+    });
+  }
+
+  getLightClientPendingMessages() {
+    return this.messagesModel.find({
+      targetChainTxHash: null,
+      l1BlockNumber: { $ne: 0 }
     });
   }
 }

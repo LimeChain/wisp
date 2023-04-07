@@ -17,8 +17,14 @@ import {
   SECONDS_PER_SLOT,
   SLOTS_PER_SYNC_PERIOD
 } from "../constants";
+import { PersistenceService } from "../persistence/persistence.service";
 
 const NODE_LENGTH = 32;
+
+type Head = {
+  slot: number,
+  block: number
+}
 
 @Injectable()
 export class LightClientService {
@@ -28,10 +34,12 @@ export class LightClientService {
   private readonly genesisTime: number;
 
   // State
-  private head: number = 0;
+  private headSlot: number = 0;
+  private headBlockNumber: number = 0;
   private nextPeriodUpdateAt: number = 0;
+  private requestedBlockNumber: number = 0;
   private pendingHeadUpdate: number = 0;
-  private readonly chain2Head = new Map<number, number>();
+  private readonly chain2Head = new Map<number, Head>();
   private readonly chain2Period = new Map<number, number>();
 
   constructor(
@@ -39,12 +47,14 @@ export class LightClientService {
     private readonly proverService: ProverService,
     private readonly config: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly persistence: PersistenceService,
     @Inject("LightClients") private readonly lightClients: LightClientContract[]
   ) {
     this.genesisTime = config.get<number>("networks.l1.genesisTime");
     // Subscribe to events
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_HEAD, this.onNewHead.bind(this));
     this.eventEmitter.on(Events.LIGHT_CLIENT_NEW_SYNC_COMMITTEE_PERIOD, this.onNewSyncPeriod.bind(this));
+    this.eventEmitter.on(Events.LIGHT_CLIENT_REQUEST_UPDATE, this.onMessageRequestHeadUpdate.bind(this));
   }
 
   /**
@@ -52,21 +62,36 @@ export class LightClientService {
    */
   async onModuleInit() {
     await Promise.all(this.lightClients.map(lc => lc.initialiseState()));
-    const blockNumbers = [];
+    const chinStates = [];
     this.lightClients.forEach(lc => {
-      this.chain2Head.set(lc.chainId, lc.head);
+      this.chain2Head.set(lc.chainId, { slot: lc.head, block: lc.headBlockNumber });
       this.chain2Period.set(lc.chainId, lc.syncCommitteePeriod);
-      blockNumbers.push({chainId: lc.chainId, blockNumber: lc.headBlockNumber});
+      chinStates.push({ chainId: lc.chainId, blockNumber: lc.headBlockNumber });
     });
 
     this._recalculateHead();
     this._recalculatePeriodUpdate();
-    this.eventEmitter.emit(Events.LIGHT_CLIENT_INITIALISED, blockNumbers);
+
+    // Request a head update for the oldest message
+    const messages = await this.persistence.getLightClientPendingMessages();
+    if (messages.length > 0) {
+      const oldestMessage = messages.reduce((oldest, current) => {
+        return oldest.l1BlockNumber < current.l1BlockNumber ? oldest : current;
+      }, { l1BlockNumber: Number.MAX_SAFE_INTEGER });
+      this.onMessageRequestHeadUpdate(oldestMessage.l1BlockNumber);
+    }
+
+    this.eventEmitter.emit(Events.LIGHT_CLIENT_INITIALISED, chinStates);
   }
 
   onNewSyncPeriod(payload: Events.SyncCommitteeUpdate) {
     this.chain2Period.set(payload.chainId, payload.period);
     this._recalculatePeriodUpdate();
+  }
+
+  onMessageRequestHeadUpdate(blockNumber: number) {
+    this.requestedBlockNumber = blockNumber;
+    this.logger.debug(`Requested update for blockNumber=${blockNumber}`);
   }
 
   _recalculatePeriodUpdate() {
@@ -84,29 +109,46 @@ export class LightClientService {
   }
 
   onNewHead(payload: Events.HeadUpdate) {
-    this.chain2Head.set(payload.chainId, payload.slot);
+    this.chain2Head.set(payload.chainId, { slot: payload.slot, block: payload.blockNumber });
     this._recalculateHead();
   }
 
   _recalculateHead() {
-    const heads = [...this.chain2Head.values()];
-    const oldestHead = Math.min(...heads);
-    if (this.head < oldestHead) {
-      this.head = oldestHead;
-      this.logger.log(`Updated head to slot = ${this.head}`);
+    const oldestHead = Array.from(this.chain2Head.entries())
+      .reduce((oldest, current) => {
+        return current[1].slot < oldest[1].slot ? current : oldest;
+      })[1];
+
+    if (this.headSlot < oldestHead.slot) {
+      this.headSlot = oldestHead.slot;
+      this.headBlockNumber = oldestHead.block;
+      this.logger.log(`Updated head to slot = ${this.headSlot}, block = ${this.headBlockNumber}`);
     }
   }
 
   async processFinalityUpdate(update: altair.LightClientUpdate) {
     const finalizedSlot = update.finalizedHeader.beacon.slot;
-    if (this.head >= finalizedSlot) {
-      this.logger.debug(`Skipping contract update for slot=${finalizedSlot}. Newer finality slot already processed`);
+    const finalizedBeaconBody = await this.beaconService.getBeaconBlockBody(finalizedSlot);
+    const finalizedExecutionBlock = finalizedBeaconBody.executionPayload.blockNumber;
+
+    const shouldUpdateSyncCommittee = finalizedSlot >= this.nextPeriodUpdateAt;
+    // Note: There is a possibility for chain A to have "outdated" head, but a message to already have been delivered in chain "B"
+    // The current logic will request update even if no messages will make use of it
+    const enablesMessageDelivery = this.requestedBlockNumber > this.headBlockNumber && this.requestedBlockNumber <= finalizedExecutionBlock;
+
+    if (this.headSlot >= finalizedSlot) {
+      this.logger.debug(`Skipping head update for slot=${finalizedSlot}. Newer finality slot already processed`);
       return;
     }
     if (this.pendingHeadUpdate >= finalizedSlot) {
       this.logger.debug(`Finality update already in progress for slot = ${finalizedSlot}`);
       return;
     }
+    if (!shouldUpdateSyncCommittee && !enablesMessageDelivery) {
+      this.logger.debug(`Skipping head update for slot = ${finalizedSlot}. Light client update not needed`);
+      return;
+    }
+
     if (!this.proverService.hasCapacity()) {
       this.logger.debug(`Prover does not have capacity. Skipping processing of Finality Update for slot=${finalizedSlot}`);
       return;
@@ -122,7 +164,6 @@ export class LightClientService {
     }
     this.pendingHeadUpdate = finalizedSlot;
 
-    const shouldUpdateSyncCommittee = finalizedSlot >= this.nextPeriodUpdateAt;
     // 1. If SyncCommittee must be updated, start Root and Proof generation processes
     const beaconStatePromise = shouldUpdateSyncCommittee ? this.getBeaconState(finalizedSlot) : Promise.resolve();
 
@@ -131,7 +172,7 @@ export class LightClientService {
     this.logger.log(`Requested ZKP for a signed Beacon Header of slot=${finalizedSlot}`);
 
     // 3. Prepare Header Update
-    const lcUpdate = await this.buildLightClientUpdate(update);
+    const lcUpdate = await this.buildLightClientUpdate(update, finalizedBeaconBody);
 
     // 4. Wait for promises to resolve
     const promiseResults = await Promise.all([blsHeaderSignatureProofPromise, beaconStatePromise]);
@@ -186,8 +227,7 @@ export class LightClientService {
     };
   }
 
-  private async buildLightClientUpdate(update: altair.LightClientUpdate): Promise<LightClientUpdate> {
-    const finalizedBeaconBody = await this.beaconService.getBeaconBlockBody(update.finalizedHeader.beacon.slot);
+  private async buildLightClientUpdate(update: altair.LightClientUpdate, finalizedBeaconBody): Promise<LightClientUpdate> {
     const executionStateRootMIP = createProof(
       lodestar.ssz.capella.BeaconBlockBody.toView(finalizedBeaconBody).node, {
         type: ProofType.single,

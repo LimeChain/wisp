@@ -27,4 +27,7 @@ export namespace Events {
     period: number,
     syncCommitteeRoot: string
   }
+
+  // Emitted when light client head update is requested for the delivery of CRC message
+  export const LIGHT_CLIENT_REQUEST_UPDATE = "light-client.request-update";
 }

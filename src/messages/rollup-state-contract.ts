@@ -3,6 +3,8 @@ import { BigNumber, Contract, ethers } from "ethers";
 import * as L1RollupStateContract from "../../abis/Optimism/OutputOracle.json";
 import { NetworkConfig } from "../configuration";
 import { PersistenceService } from "../persistence/persistence.service";
+import { Events } from "../events/events";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 @Injectable()
 export class RollupStateContract {
@@ -14,7 +16,8 @@ export class RollupStateContract {
   constructor(
     private readonly persistence: PersistenceService,
     private readonly networkConfig: NetworkConfig,
-    private readonly l1RpcUrl: string
+    private readonly l1RpcUrl: string,
+    private readonly eventEmitter: EventEmitter2
   ) {
     this.logger = new Logger(`${RollupStateContract.name}-${networkConfig.name}`);
     this.chainId = networkConfig.chainId;
@@ -40,6 +43,11 @@ export class RollupStateContract {
   async onNewBatchPosted(outputRoot: string, l2OutputIndex: BigNumber, l2BlockNumber: BigNumber, l1Timestamp: BigNumber, eventData) {
     this.logger.log(`New state posted on L1 up to L2 BlockNumber = ${l2BlockNumber.toNumber()}`);
     const block = await eventData.getBlock();
-    await this.persistence.updateWithL1BlockNumber(this.chainId, eventData.blockNumber, eventData.transactionHash, block.timestamp);
+    const updatedMessages = await this.persistence.updateWithL1BlockNumber(this.chainId, eventData.blockNumber, eventData.transactionHash, block.timestamp);
+    if (updatedMessages > 0) {
+      this.logger.log(`Populated L1 block number for ${updatedMessages} message(s)`);
+      // Request Light Client Update
+      this.eventEmitter.emit(Events.LIGHT_CLIENT_REQUEST_UPDATE, eventData.blockNumber);
+    }
   }
 }

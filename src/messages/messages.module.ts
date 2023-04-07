@@ -31,14 +31,14 @@ import { PersistenceModule } from "../persistence/persistence.module";
     },
     {
       provide: "RollupStateContracts",
-      useFactory: (config: ConfigService, persistence: PersistenceService) => {
+      useFactory: (config: ConfigService, persistence: PersistenceService, eventEmitter: EventEmitter2) => {
         const l1RpcUrl = config.get<string>("networks.l1.executionNode.url");
         // Instantiate Rollup contract listeners for rollups that support outgoing communication
         return config.get<NetworkConfig[]>("networks.rollups")
           .filter(config => config.outgoing.supported)
-          .map((config) => new RollupStateContract(persistence, config, l1RpcUrl));
+          .map((config) => new RollupStateContract(persistence, config, l1RpcUrl, eventEmitter));
       },
-      inject: [ConfigService, PersistenceService]
+      inject: [ConfigService, PersistenceService, EventEmitter2]
     },
     {
       provide: "InboxContracts",
