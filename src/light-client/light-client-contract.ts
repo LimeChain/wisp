@@ -73,7 +73,7 @@ export class LightClientContract {
       return;
     }
     try {
-      const tx = await this.lightClient.update(update);
+      const tx = await this.lightClient.update(update, { gasLimit: 800_000 });
       this.logger.log(`Submitted header update transaction. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot}`);
       tx.wait().catch(e => {
         this.logger.error(`Failed to update header. Hash = ${tx.hash} slot = ${update.finalizedHeader.slot} Error: ${e}`);
