@@ -52,9 +52,9 @@ export class PersistenceService {
     }
   }
 
-  async updateWithL1BlockNumber(sourceChainId: number, l1BlockNumber: number, l1ChainTxHash: string, l1BlockTimestamp: number) {
+  async updateWithL1BlockNumber(sourceChainId: number, l2BlockNumber: number, l1BlockNumber: number, l1ChainTxHash: string, l1BlockTimestamp: number) {
     const result = await this.messagesModel.updateMany(
-      { sourceChainId, l1BlockNumber: 0 },
+      { sourceChainId, l1BlockNumber: 0, l2BlockNumber: { $lte: l2BlockNumber } },
       { $set: { l1BlockNumber, l1ChainTxHash, l1BlockTimestamp } }
     );
     return result.modifiedCount;

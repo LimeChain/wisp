@@ -43,7 +43,14 @@ export class RollupStateContract {
   async onNewBatchPosted(outputRoot: string, l2OutputIndex: BigNumber, l2BlockNumber: BigNumber, l1Timestamp: BigNumber, eventData) {
     this.logger.log(`New state posted on L1 up to L2 BlockNumber = ${l2BlockNumber.toNumber()}`);
     const block = await eventData.getBlock();
-    const updatedMessages = await this.persistence.updateWithL1BlockNumber(this.chainId, eventData.blockNumber, eventData.transactionHash, block.timestamp);
+    const updatedMessages = await this.persistence.updateWithL1BlockNumber(
+      this.chainId,
+      l2BlockNumber.toNumber(),
+      eventData.blockNumber,
+      eventData.transactionHash,
+      block.timestamp
+    );
+
     if (updatedMessages > 0) {
       this.logger.log(`Populated L1 block number for ${updatedMessages} message(s)`);
       // Request Light Client Update
