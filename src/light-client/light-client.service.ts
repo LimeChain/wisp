@@ -72,13 +72,17 @@ export class LightClientService {
     this._recalculateHead();
     this._recalculatePeriodUpdate();
 
-    // Request a head update for the oldest message
+    // Request a head update for the latest message
     const messages = await this.persistence.getLightClientPendingMessages();
     if (messages.length > 0) {
-      const oldestMessage = messages.reduce((oldest, current) => {
-        return oldest.l1BlockNumber < current.l1BlockNumber ? oldest : current;
-      }, { l1BlockNumber: Number.MAX_SAFE_INTEGER });
-      this.onMessageRequestHeadUpdate(oldestMessage.l1BlockNumber);
+      const latestMessage = messages.reduce((latest, current) => {
+        if (!latest) {
+          return current;
+        } else {
+          return latest.l1BlockNumber > current.l1BlockNumber ? latest : current;
+        }
+      }, undefined);
+      this.onMessageRequestHeadUpdate(latestMessage.l1BlockNumber);
     }
 
     this.eventEmitter.emit(Events.LIGHT_CLIENT_INITIALISED, chinStates);
